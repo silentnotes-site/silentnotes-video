@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SilentNotes Videos</title>
-
 <style>
 *{box-sizing:border-box}
 body{
@@ -14,11 +13,12 @@ background:linear-gradient(135deg,#ff0080,#7928ca,#2afadf);
 background-size:400% 400%;
 animation:bg 18s infinite alternate;
 color:white;
+overflow-x:hidden;
 }
 
 @keyframes bg{0%{background-position:0%}100%{background-position:100%}}
 
-h1{text-align:center;margin:20px 0}
+h1{text-align:center;margin:20px 0;font-weight:800}
 
 #container{
 max-width:480px;
@@ -26,36 +26,24 @@ margin:auto;
 padding-bottom:80px;
 }
 
-form{
-background:rgba(255,255,255,.15);
-backdrop-filter:blur(12px);
-padding:18px;
-border-radius:22px;
+#uploadBtn{
 display:flex;
-flex-direction:column;
-gap:10px;
-margin:0 12px;
-}
-
-input,button{
-padding:12px;
-border-radius:14px;
+align-items:center;
+justify-content:center;
+margin:0 auto 20px;
+padding:14px 28px;
 border:none;
-outline:none;
-font-size:15px;
-}
-
-button{
-font-weight:700;
-cursor:pointer;
+border-radius:22px;
 background:white;
 color:black;
+font-weight:700;
+cursor:pointer;
 transition:.25s;
+box-shadow:0 6px 15px rgba(0,0,0,.25);
 }
-button:hover{transform:scale(1.04)}
+#uploadBtn:hover{transform:scale(1.05)}
 
 #feed{
-margin-top:20px;
 display:flex;
 flex-direction:column;
 gap:30px;
@@ -67,19 +55,28 @@ background:rgba(0,0,0,.25);
 border-radius:26px;
 overflow:hidden;
 backdrop-filter:blur(8px);
-}
-
-.player{
+transition:.3s;
 position:relative;
-width:100%;
-height:80vh;
-background:black;
 }
 
-.player video{
+.fullscreen-player{
+position:fixed;
+top:0;
+left:0;
 width:100%;
 height:100%;
-object-fit:cover;
+background:black;
+z-index:9999;
+display:flex;
+flex-direction:column;
+}
+
+.fullscreen-player video{
+width:100%;
+height:100%;
+object-fit:contain;
+cursor:pointer;
+background:black;
 }
 
 .overlayRight{
@@ -91,6 +88,7 @@ flex-direction:column;
 gap:14px;
 font-size:14px;
 align-items:center;
+z-index:10;
 }
 
 .action{
@@ -98,7 +96,12 @@ background:rgba(0,0,0,.55);
 padding:10px;
 border-radius:50%;
 cursor:pointer;
+display:flex;
+align-items:center;
+justify-content:center;
+transition:.25s;
 }
+.action:hover{transform:scale(1.2)}
 
 .controls{
 position:absolute;
@@ -110,6 +113,7 @@ display:flex;
 align-items:center;
 gap:10px;
 background:linear-gradient(transparent,rgba(0,0,0,.75));
+z-index:10;
 }
 
 .play{
@@ -123,7 +127,9 @@ align-items:center;
 justify-content:center;
 font-weight:900;
 cursor:pointer;
+transition:.25s;
 }
+.play:hover{transform:scale(1.1)}
 
 .progress{
 flex:1;
@@ -138,6 +144,7 @@ cursor:pointer;
 height:100%;
 width:0%;
 background:white;
+transition:.1s linear;
 }
 
 .meta{
@@ -154,6 +161,8 @@ margin-top:10px;
 display:flex;
 flex-direction:column;
 gap:6px;
+max-height:200px;
+overflow-y:auto;
 }
 
 .comment{
@@ -171,42 +180,54 @@ margin-top:8px;
 
 .addComment input{
 flex:1;
+padding:8px 12px;
+border-radius:12px;
+border:none;
+outline:none;
 }
+
+.addComment button{
+padding:8px 14px;
+border:none;
+border-radius:12px;
+background:white;
+color:black;
+cursor:pointer;
+transition:.25s;
+font-weight:700;
+}
+.addComment button:hover{transform:scale(1.05)}
 
 .empty{
 text-align:center;
 opacity:.7;
 margin-top:50px;
-}
-
-.fullscreen{
-position:fixed;
-inset:0;
-z-index:9999;
-border-radius:0;
+font-size:18px;
 }
 </style>
 </head>
-
 <body>
 
 <h1>SilentNotes Videos</h1>
 
 <div id="container">
 
-<form id="uploadForm">
-<input type="file" id="file" required>
-<input type="text" id="description" placeholder="Descrizione">
-<input type="text" id="hashtags" placeholder="#hashtags">
-<button>Upload</button>
-</form>
+<button id="uploadBtn">Carica un Video</button>
+<input type="file" id="fileInput" accept="video/*" style="display:none">
 
 <div id="feed"><div class="empty">Nessun video disponibile</div></div>
 
 </div>
 
+<div id="fullscreenWrapper" style="display:none;"></div>
+
 <script>
 const feed=document.getElementById('feed')
+const uploadBtn=document.getElementById('uploadBtn')
+const fileInput=document.getElementById('fileInput')
+const fullscreenWrapper=document.getElementById('fullscreenWrapper')
+
+uploadBtn.onclick=()=>fileInput.click()
 
 let startY=0
 
@@ -214,20 +235,23 @@ async function loadVideos(){
 const r=await fetch('/api/videos')
 const d=await r.json()
 feed.innerHTML=''
-if(d.empty||!d.videos.length){
+if(!d.videos||!d.videos.length){
 feed.innerHTML='<div class="empty">Nessun video disponibile</div>'
 return
 }
 d.videos.forEach(v=>{
 const c=document.createElement('div')
 c.className='videoCard'
+const likesKey='liked_'+v.id
+const liked=localStorage.getItem(likesKey)
 c.innerHTML=`
 <div class="player">
 <video src="/media/${v.filename}" loop playsinline></video>
 <div class="overlayRight">
 <div class="action">👁 ${v.views||0}</div>
 <div class="action" onclick="share('${v.id}')">🔗</div>
-<div class="action" onclick="fullscreen(this)">⛶</div>
+<div class="action" id="like-${v.id}" style="color:${liked?'red':'white'}">❤️ ${v.likes||0}</div>
+<div class="action" onclick="toggleFullscreen('${v.id}')">⛶</div>
 </div>
 <div class="controls">
 <div class="play">▶</div>
@@ -242,7 +266,7 @@ ${v.comments.map(x=>`<div class="comment">${x.text}</div>`).join('')}
 </div>
 <div class="addComment">
 <input id="i-${v.id}" placeholder="Commenta in anonimo">
-<button onclick="comment('${v.id}')">Invia</button>
+<button onclick="comment('${v.id}', this)">Invia</button>
 </div>
 </div>
 `
@@ -258,9 +282,7 @@ if(video.paused){video.play();play.textContent='❚❚'}
 else{video.pause();play.textContent='▶'}
 }
 
-video.ontimeupdate=()=>{
-bar.style.width=(video.currentTime/video.duration*100||0)+'%'
-}
+video.ontimeupdate=()=>{bar.style.width=(video.currentTime/video.duration*100||0)+'%'}
 
 progress.onclick=e=>{
 const p=e.offsetX/progress.clientWidth
@@ -272,57 +294,107 @@ if(video.paused){video.play();play.textContent='❚❚'}
 else{video.pause();play.textContent='▶'}
 }
 
-video.addEventListener('play',()=>{
-fetch('/api/view/'+v.id,{method:'POST'})
-})
+video.addEventListener('play',()=>{fetch('/api/view/'+v.id,{method:'POST'})})
+
+const likeBtn=document.getElementById('like-'+v.id)
+likeBtn.onclick=async()=>{
+if(localStorage.getItem(likesKey))return
+localStorage.setItem(likesKey,'1')
+likeBtn.style.color='red'
+await fetch('/api/like/'+v.id,{method:'POST'})
+let count=parseInt(likeBtn.textContent.replace(/\D/g,''))||0
+likeBtn.textContent='❤️ '+(count+1)
+}
 })
 }
 
-function fullscreen(el){
-const card=el.closest('.videoCard')
-card.classList.toggle('fullscreen')
-const video=card.querySelector('video')
-video.requestFullscreen?.()
-video.play()
+// Funzione per aprire il player fullscreen personalizzato
+function toggleFullscreen(videoId){
+const origCard=[...document.querySelectorAll('.videoCard')].find(c=>{
+return c.querySelector(`#like-${videoId}`)
+})
+if(!origCard)return
+const origVideo=origCard.querySelector('video')
+const clone=origVideo.cloneNode(true)
+clone.controls=false
+clone.loop=false
+clone.autoplay=true
+
+fullscreenWrapper.innerHTML=''
+const wrapper=document.createElement('div')
+wrapper.className='fullscreen-player'
+wrapper.appendChild(clone)
+
+// Controlli personalizzati
+const controls=document.createElement('div')
+controls.className='controls'
+controls.innerHTML=`<div class="play">❚❚</div>
+<div class="progress"><div class="bar"></div></div>`
+wrapper.appendChild(controls)
+fullscreenWrapper.appendChild(wrapper)
+fullscreenWrapper.style.display='flex'
+
+const playBtn=controls.querySelector('.play')
+const bar=controls.querySelector('.bar')
+const progress=controls.querySelector('.progress')
+
+playBtn.onclick=()=>{
+if(clone.paused){clone.play();playBtn.textContent='❚❚'}
+else{clone.pause();playBtn.textContent='▶'}
+}
+
+clone.ontimeupdate=()=>{bar.style.width=(clone.currentTime/clone.duration*100||0)+'%'}
+
+progress.onclick=e=>{
+const p=e.offsetX/progress.clientWidth
+clone.currentTime=clone.duration*p
+}
+
+// Chiudi cliccando video o ESC
+clone.onclick=closeFullscreen
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeFullscreen()},{once:true})
+}
+
+function closeFullscreen(){
+fullscreenWrapper.style.display='none'
+fullscreenWrapper.innerHTML=''
 }
 
 function share(id){
 const url=location.origin+'/video/'+id
-if(navigator.share){
-navigator.share({url})
-}else{
-navigator.clipboard.writeText(url)
-alert('Link copiato')
-}
+if(navigator.share){navigator.share({url})}
+else{navigator.clipboard.writeText(url);alert('Link copiato')}
 }
 
-async function comment(id){
+async function comment(id, btn){
 const i=document.getElementById('i-'+id)
 const t=i.value.trim()
 if(!t)return
+btn.disabled=true
 const r=await fetch('/api/comment/'+id,{
 method:'POST',
 headers:{'Content-Type':'application/json'},
 body:JSON.stringify({text:t})
 })
+btn.disabled=false
 const d=await r.json()
 if(d.success){
-document.getElementById('com-'+id)
-.insertAdjacentHTML('beforeend',`<div class="comment">${d.comment.text}</div>`)
+const comEl=document.getElementById('com-'+id)
+const newComment=document.createElement('div')
+newComment.className='comment'
+newComment.textContent=d.comment.text
+comEl.appendChild(newComment)
 i.value=''
+comEl.scrollTop=comEl.scrollHeight
 }
 }
 
-uploadForm.onsubmit=async e=>{
-e.preventDefault()
+fileInput.onchange=async()=>{
+if(!fileInput.files[0])return
 const f=new FormData()
-f.append('file',file.files[0])
-f.append('description',description.value)
-f.append('hashtags',hashtags.value)
+f.append('file',fileInput.files[0])
 await fetch('/api/upload',{method:'POST',body:f})
-file.value=''
-description.value=''
-hashtags.value=''
+fileInput.value=''
 loadVideos()
 }
 
@@ -335,6 +407,5 @@ if(endY-startY>80)window.scrollBy({top:-window.innerHeight,behavior:'smooth'})
 
 loadVideos()
 </script>
-
 </body>
 </html>
