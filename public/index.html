@@ -2,90 +2,174 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SilentNotes Videos</title>
+
 <style>
-body{margin:0;font-family:sans-serif;background:linear-gradient(135deg,#ff9a9e,#fad0c4,#fbc2eb,#a18cd1);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px;animation:bgAnimate 20s infinite alternate;}
-@keyframes bgAnimate{0%{background-position:0% 50%}100%{background-position:100% 50%}}
-h1{color:white;text-align:center;margin-bottom:20px;}
-form,input,button{padding:10px;margin:5px;border:none;border-radius:8px;}
-form{background:rgba(255,255,255,0.2);padding:20px;display:flex;flex-direction:column;align-items:center;}
-video{max-width:300px;border-radius:10px;margin-bottom:10px;box-shadow:0 5px 15px rgba(0,0,0,0.3);}
-.comment{background:rgba(255,255,255,0.3);margin:3px;padding:5px;border-radius:5px;}
-button{background:#fff;color:#333;font-weight:bold;cursor:pointer;transition:0.3s;}
-button:hover{transform:scale(1.05);}
-#feed{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;margin-top:20px;}
+body{
+margin:0;
+font-family:Inter,Arial;
+background:linear-gradient(135deg,#ff0080,#7928ca,#2afadf);
+background-size:400% 400%;
+animation:bg 20s infinite alternate;
+color:white;
+display:flex;
+flex-direction:column;
+align-items:center;
+}
+@keyframes bg{0%{background-position:0%}100%{background-position:100%}}
+
+h1{margin:20px 0}
+
+form{
+background:rgba(255,255,255,.15);
+backdrop-filter:blur(10px);
+padding:20px;
+border-radius:20px;
+display:flex;
+flex-direction:column;
+gap:10px;
+width:100%;
+max-width:420px;
+}
+
+input,button{
+padding:12px;
+border-radius:12px;
+border:none;
+outline:none;
+}
+
+button{
+font-weight:700;
+cursor:pointer;
+transition:.3s;
+}
+button:hover{transform:scale(1.05)}
+
+#feed{
+margin-top:20px;
+width:100%;
+max-width:420px;
+height:calc(100vh - 300px);
+overflow-y:auto;
+scroll-snap-type:y mandatory;
+}
+
+.videoCard{
+height:100%;
+scroll-snap-align:start;
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:8px;
+}
+
+video{
+width:100%;
+height:70vh;
+object-fit:cover;
+border-radius:20px;
+}
+
+.comment{
+background:rgba(255,255,255,.2);
+padding:6px 10px;
+border-radius:10px;
+margin:3px 0;
+font-size:14px;
+}
+
+.empty{
+text-align:center;
+opacity:.8;
+margin-top:40px;
+}
 </style>
 </head>
+
 <body>
+
 <h1>SilentNotes Videos</h1>
 
 <form id="uploadForm">
 <input type="file" id="file" required>
 <input type="text" id="description" placeholder="Description">
 <input type="text" id="hashtags" placeholder="#hashtags">
-<button type="submit">Upload Video</button>
+<button>Upload</button>
 </form>
 
-<div id="feed"><p id="empty">Currently no videos</p></div>
+<div id="feed"><div class="empty">Currently no videos</div></div>
 
 <script>
-async function loadVideos(){
-  const res = await fetch('/api/videos')
-  const data = await res.json()
-  const feed = document.getElementById('feed')
-  feed.innerHTML=''
-  const videoList = data.videos || []
-  if(videoList.length===0){feed.innerHTML='<p>Currently no videos</p>';return}
-  videoList.forEach(v=>{
-    const div = document.createElement('div')
-    div.innerHTML=`
-      <video src="/data/uploads/${v.filename}" controls></video>
-      <p>${v.description}</p>
-      <p>${v.hashtags}</p>
-      <div id="comments-${v.id}">${v.comments.map(c=>`<div class="comment">${c.text}</div>`).join('')}</div>
-      <input type="text" id="input-${v.id}" placeholder="Add comment">
-      <button onclick="postComment('${v.id}')">Comment</button>
-    `
-    feed.appendChild(div)
-  })
-}
+const feed=document.getElementById('feed')
 
-async function postComment(id){
-  const input = document.getElementById(`input-${id}`)
-  const text = input.value.trim()
-  if(!text) return
-  const res = await fetch(`/api/comment/${id}`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({text})
-  })
-  const data = await res.json()
-  if(data.success){
-    const comDiv = document.getElementById(`comments-${id}`)
-    const div = document.createElement('div')
-    div.className='comment'
-    div.textContent=data.comment.text
-    comDiv.appendChild(div)
-    input.value=''
-  }
-}
-
-document.getElementById('uploadForm').addEventListener('submit',async e=>{
-  e.preventDefault()
-  const file = document.getElementById('file').files[0]
-  const description = document.getElementById('description').value
-  const hashtags = document.getElementById('hashtags').value
-  const formData = new FormData()
-  formData.append('file',file)
-  formData.append('description',description)
-  formData.append('hashtags',hashtags)
-  const res = await fetch('/api/upload',{method:'POST',body:formData})
-  const data = await res.json()
-  if(data.success){loadVideos();document.getElementById('description').value='';document.getElementById('hashtags').value='';document.getElementById('file').value=''}
+const observer=new IntersectionObserver(e=>{
+e.forEach(x=>{
+const v=x.target.querySelector('video')
+if(!v)return
+x.isIntersecting?v.play():v.pause()
 })
+},{threshold:.75})
+
+async function loadVideos(){
+const r=await fetch('/api/videos')
+const d=await r.json()
+feed.innerHTML=''
+if(d.empty||!d.videos.length){
+feed.innerHTML='<div class="empty">Currently no videos</div>'
+return
+}
+d.videos.forEach(v=>{
+const c=document.createElement('div')
+c.className='videoCard'
+c.innerHTML=`
+<video src="/media/${v.filename}" playsinline loop controls></video>
+<div>${v.description}</div>
+<div>${v.hashtags}</div>
+<div id="com-${v.id}">
+${v.comments.map(x=>`<div class="comment">${x.text}</div>`).join('')}
+</div>
+<input id="i-${v.id}" placeholder="Anonymous comment">
+<button onclick="comment('${v.id}')">Send</button>
+`
+feed.appendChild(c)
+observer.observe(c)
+})
+}
+
+async function comment(id){
+const i=document.getElementById('i-'+id)
+const t=i.value.trim()
+if(!t)return
+const r=await fetch('/api/comment/'+id,{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({text:t})
+})
+const d=await r.json()
+if(d.success){
+document.getElementById('com-'+id)
+.insertAdjacentHTML('beforeend',`<div class="comment">${d.comment.text}</div>`)
+i.value=''
+}
+}
+
+document.getElementById('uploadForm').onsubmit=async e=>{
+e.preventDefault()
+const f=new FormData()
+f.append('file',file.files[0])
+f.append('description',description.value)
+f.append('hashtags',hashtags.value)
+await fetch('/api/upload',{method:'POST',body:f})
+file.value=''
+description.value=''
+hashtags.value=''
+loadVideos()
+}
 
 loadVideos()
 </script>
+
 </body>
 </html>
