@@ -21,26 +21,26 @@ overflow-x:hidden;
 h1{text-align:center;margin:20px 0;font-weight:800}
 #container{max-width:480px;margin:auto;padding-bottom:80px}
 
-/* BUTTONS */
 button{
 border:none;
 border-radius:14px;
 padding:10px 18px;
 font-weight:700;
 cursor:pointer;
-transition:.2s;
+transition:.15s;
 }
-button:active{transform:scale(.95)}
+button:active{transform:scale(.94)}
+
 .btn-send{
 background:linear-gradient(135deg,#2afadf,#00c6ff);
 color:black;
 }
+
 .btn-cancel{
 background:rgba(255,255,255,.15);
 color:white;
 }
 
-/* UPLOAD */
 #uploadBtn{
 margin:0 auto 10px;
 display:block;
@@ -50,7 +50,6 @@ border-radius:22px;
 padding:14px 28px;
 }
 
-/* FEED */
 #feed{
 display:flex;
 flex-direction:column;
@@ -65,7 +64,6 @@ overflow:hidden;
 backdrop-filter:blur(8px);
 }
 
-/* PLAYER */
 .player{
 position:relative;
 width:100%;
@@ -81,7 +79,6 @@ object-fit:cover;
 cursor:pointer;
 }
 
-/* OVERLAY */
 .overlayRight{
 position:absolute;
 right:10px;
@@ -99,9 +96,19 @@ padding:10px;
 border-radius:50%;
 font-size:14px;
 cursor:pointer;
+transition:.2s;
 }
 
-/* CONTROLS */
+.action.pop{
+animation:pop .3s ease;
+}
+
+@keyframes pop{
+0%{transform:scale(1)}
+50%{transform:scale(1.4)}
+100%{transform:scale(1)}
+}
+
 .controls{
 position:absolute;
 bottom:0;
@@ -125,6 +132,11 @@ align-items:center;
 justify-content:center;
 font-weight:900;
 cursor:pointer;
+transition:.15s;
+}
+
+.play.tap{
+transform:scale(.85);
 }
 
 .progress{
@@ -134,14 +146,15 @@ background:rgba(255,255,255,.3);
 border-radius:10px;
 overflow:hidden;
 cursor:pointer;
+touch-action:none;
 }
+
 .bar{
 height:100%;
 width:0%;
 background:white;
 }
 
-/* META / COMMENTS */
 .meta{
 padding:14px;
 background:rgba(0,0,0,.35);
@@ -170,6 +183,7 @@ display:flex;
 gap:6px;
 margin-top:8px;
 }
+
 .addComment input{
 flex:1;
 padding:8px 12px;
@@ -178,7 +192,6 @@ border:none;
 outline:none;
 }
 
-/* UPLOAD MODAL */
 #uploadModal{
 display:none;
 position:fixed;
@@ -189,6 +202,7 @@ z-index:10000;
 align-items:center;
 justify-content:center;
 }
+
 .modalContent{
 background:#111;
 padding:20px;
@@ -199,11 +213,13 @@ display:flex;
 flex-direction:column;
 gap:12px;
 }
+
 .modalContent input{
 padding:10px;
 border-radius:12px;
 border:none;
 }
+
 .modalBtns{
 display:flex;
 gap:10px;
@@ -228,7 +244,6 @@ font-size:18px;
 <div id="feed"><div class="empty">Nessun video disponibile</div></div>
 </div>
 
-<!-- UPLOAD MODAL -->
 <div id="uploadModal">
 <div class="modalContent">
 <h2>Carica Video</h2>
@@ -314,13 +329,23 @@ const progress=card.querySelector('.progress')
 
 function toggle(){
 document.querySelectorAll('video').forEach(v=>v!==video&&v.pause())
+play.classList.add('tap')
+setTimeout(()=>play.classList.remove('tap'),120)
 if(video.paused){video.play();play.textContent='❚❚'}else{video.pause();play.textContent='▶'}
 }
 video.onclick=toggle
 play.onclick=toggle
 
 video.ontimeupdate=()=>bar.style.width=(video.currentTime/video.duration*100||0)+'%'
-progress.onclick=e=>video.currentTime=video.duration*(e.offsetX/progress.clientWidth)
+
+let seeking=false
+progress.addEventListener('touchstart',()=>seeking=true)
+progress.addEventListener('touchend',()=>seeking=false)
+progress.addEventListener('touchmove',e=>{
+if(!seeking)return
+const r=progress.getBoundingClientRect()
+video.currentTime=video.duration*((e.touches[0].clientX-r.left)/r.width)
+})
 
 video.onplay=()=>fetch('/api/view/'+v.id,{method:'POST'})
 
@@ -329,13 +354,14 @@ like.onclick=async()=>{
 if(localStorage.getItem(likedKey))return
 localStorage.setItem(likedKey,'1')
 like.style.color='red'
+like.classList.add('pop')
+setTimeout(()=>like.classList.remove('pop'),300)
 await fetch('/api/like/'+v.id,{method:'POST'})
 like.textContent='❤️ '+((v.likes||0)+1)
 }
 })
 }
 
-/* COMMENT */
 async function comment(id,btn){
 const i=document.getElementById('i-'+id)
 if(!i.value.trim())return
@@ -353,13 +379,11 @@ i.value=''
 }
 }
 
-/* SHARE */
 function share(id){
 const url=location.origin+'/?video='+id
 navigator.share?navigator.share({url}):(navigator.clipboard.writeText(url),alert('Link copiato'))
 }
 
-/* OPEN VIDEO FROM LINK */
 const openId=new URLSearchParams(location.search).get('video')
 if(openId){
 setTimeout(()=>{
