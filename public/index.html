@@ -21,21 +21,36 @@ overflow-x:hidden;
 h1{text-align:center;margin:20px 0;font-weight:800}
 #container{max-width:480px;margin:auto;padding-bottom:80px}
 
-#uploadBtn{
-display:flex;
-align-items:center;
-justify-content:center;
-margin:0 auto 10px;
-padding:14px 28px;
+/* BUTTONS */
+button{
 border:none;
-border-radius:22px;
-background:white;
-color:black;
+border-radius:14px;
+padding:10px 18px;
 font-weight:700;
 cursor:pointer;
-box-shadow:0 6px 15px rgba(0,0,0,.25);
+transition:.2s;
+}
+button:active{transform:scale(.95)}
+.btn-send{
+background:linear-gradient(135deg,#2afadf,#00c6ff);
+color:black;
+}
+.btn-cancel{
+background:rgba(255,255,255,.15);
+color:white;
 }
 
+/* UPLOAD */
+#uploadBtn{
+margin:0 auto 10px;
+display:block;
+background:white;
+color:black;
+border-radius:22px;
+padding:14px 28px;
+}
+
+/* FEED */
 #feed{
 display:flex;
 flex-direction:column;
@@ -48,18 +63,25 @@ background:rgba(0,0,0,.25);
 border-radius:26px;
 overflow:hidden;
 backdrop-filter:blur(8px);
-position:relative;
 }
 
-/* VIDEO */
-.videoCard video{
+/* PLAYER */
+.player{
+position:relative;
 width:100%;
-height:70vh;
-object-fit:cover;
+height:75vh;
 background:black;
+overflow:hidden;
+}
+
+.player video{
+width:100%;
+height:100%;
+object-fit:cover;
 cursor:pointer;
 }
 
+/* OVERLAY */
 .overlayRight{
 position:absolute;
 right:10px;
@@ -67,18 +89,19 @@ bottom:90px;
 display:flex;
 flex-direction:column;
 gap:14px;
-font-size:14px;
 align-items:center;
-z-index:10;
+z-index:5;
 }
 
 .action{
 background:rgba(0,0,0,.55);
 padding:10px;
 border-radius:50%;
+font-size:14px;
 cursor:pointer;
 }
 
+/* CONTROLS */
 .controls{
 position:absolute;
 bottom:0;
@@ -89,7 +112,6 @@ display:flex;
 align-items:center;
 gap:10px;
 background:linear-gradient(transparent,rgba(0,0,0,.75));
-z-index:10;
 }
 
 .play{
@@ -113,20 +135,16 @@ border-radius:10px;
 overflow:hidden;
 cursor:pointer;
 }
-
 .bar{
 height:100%;
 width:0%;
 background:white;
 }
 
+/* META / COMMENTS */
 .meta{
 padding:14px;
-display:flex;
-flex-direction:column;
-gap:6px;
-position:relative;
-z-index:5;
+background:rgba(0,0,0,.35);
 }
 
 .tags{opacity:.8;font-size:14px}
@@ -152,7 +170,6 @@ display:flex;
 gap:6px;
 margin-top:8px;
 }
-
 .addComment input{
 flex:1;
 padding:8px 12px;
@@ -161,24 +178,7 @@ border:none;
 outline:none;
 }
 
-.addComment button{
-padding:8px 14px;
-border:none;
-border-radius:12px;
-background:white;
-color:black;
-cursor:pointer;
-font-weight:700;
-}
-
-.empty{
-text-align:center;
-opacity:.7;
-margin-top:50px;
-font-size:18px;
-}
-
-/* MODALE UPLOAD */
+/* UPLOAD MODAL */
 #uploadModal{
 display:none;
 position:fixed;
@@ -189,8 +189,7 @@ z-index:10000;
 align-items:center;
 justify-content:center;
 }
-
-#uploadModal .modalContent{
+.modalContent{
 background:#111;
 padding:20px;
 border-radius:20px;
@@ -200,18 +199,23 @@ display:flex;
 flex-direction:column;
 gap:12px;
 }
-#uploadModal input{
+.modalContent input{
 padding:10px;
 border-radius:12px;
 border:none;
 }
-#uploadModal .modalBtns{
+.modalBtns{
 display:flex;
 gap:10px;
 justify-content:center;
 }
-#cancelUpload{background:red;color:white}
-#confirmUpload{background:white;color:black}
+
+.empty{
+text-align:center;
+opacity:.7;
+margin-top:50px;
+font-size:18px;
+}
 </style>
 </head>
 
@@ -224,17 +228,18 @@ justify-content:center;
 <div id="feed"><div class="empty">Nessun video disponibile</div></div>
 </div>
 
+<!-- UPLOAD MODAL -->
 <div id="uploadModal">
-  <div class="modalContent">
-    <h2>Carica Video</h2>
-    <input type="file" id="fileInputModal" accept="video/*">
-    <input type="text" id="videoDescriptionModal" placeholder="Descrizione...">
-    <input type="text" id="videoHashtagsModal" placeholder="#trend #viral">
-    <div class="modalBtns">
-      <button id="cancelUpload">Annulla</button>
-      <button id="confirmUpload">Invia</button>
-    </div>
-  </div>
+<div class="modalContent">
+<h2>Carica Video</h2>
+<input type="file" id="fileInputModal" accept="video/*">
+<input type="text" id="videoDescriptionModal" placeholder="Descrizione...">
+<input type="text" id="videoHashtagsModal" placeholder="#trend #viral">
+<div class="modalBtns">
+<button id="cancelUpload" class="btn-cancel">Annulla</button>
+<button id="confirmUpload" class="btn-send">Invia</button>
+</div>
+</div>
 </div>
 
 <script>
@@ -247,7 +252,7 @@ cancelUpload.onclick=()=>uploadModal.style.display='none'
 
 confirmUpload.onclick=async()=>{
 const file=fileInputModal.files[0]
-if(!file||!file.type.startsWith('video/')) return alert('Seleziona un video valido')
+if(!file||!file.type.startsWith('video/'))return alert('Seleziona un video valido')
 const f=new FormData()
 f.append('file',file)
 f.append('description',videoDescriptionModal.value)
@@ -268,22 +273,22 @@ return
 
 d.videos.forEach(v=>{
 const likedKey='liked_'+v.id
-const c=document.createElement('div')
-c.className='videoCard'
-c.innerHTML=`
+const card=document.createElement('div')
+card.className='videoCard'
+card.innerHTML=`
+<div class="player">
 <video src="/media/${v.filename}" loop playsinline></video>
 
 <div class="overlayRight">
 <div class="action">👁 ${v.views||0}</div>
 <div class="action" onclick="share('${v.id}')">🔗</div>
-<div class="action" id="like-${v.id}" style="color:${localStorage.getItem(likedKey)?'red':'white'}">
-❤️ ${v.likes||0}
-</div>
+<div class="action" id="like-${v.id}" style="color:${localStorage.getItem(likedKey)?'red':'white'}">❤️ ${v.likes||0}</div>
 </div>
 
 <div class="controls">
 <div class="play">▶</div>
 <div class="progress"><div class="bar"></div></div>
+</div>
 </div>
 
 <div class="meta">
@@ -291,24 +296,28 @@ c.innerHTML=`
 <div class="tags">${v.hashtags||''}</div>
 
 <div class="comments" id="com-${v.id}">
-${(v.comments||[]).map(x=>`<div class="comment">${x.text}</div>`).join('')}
+${(v.comments||[]).map(c=>`<div class="comment">${c.text}</div>`).join('')}
 </div>
 
 <div class="addComment">
 <input id="i-${v.id}" placeholder="Commenta in anonimo">
-<button onclick="comment('${v.id}',this)">Invia</button>
+<button class="btn-send" onclick="comment('${v.id}',this)">Invia</button>
 </div>
 </div>
 `
-feed.appendChild(c)
+feed.appendChild(card)
 
-const video=c.querySelector('video')
-const play=c.querySelector('.play')
-const bar=c.querySelector('.bar')
-const progress=c.querySelector('.progress')
+const video=card.querySelector('video')
+const play=card.querySelector('.play')
+const bar=card.querySelector('.bar')
+const progress=card.querySelector('.progress')
 
-play.onclick=()=>toggle(video,play)
-video.onclick=()=>toggle(video,play)
+function toggle(){
+document.querySelectorAll('video').forEach(v=>v!==video&&v.pause())
+if(video.paused){video.play();play.textContent='❚❚'}else{video.pause();play.textContent='▶'}
+}
+video.onclick=toggle
+play.onclick=toggle
 
 video.ontimeupdate=()=>bar.style.width=(video.currentTime/video.duration*100||0)+'%'
 progress.onclick=e=>video.currentTime=video.duration*(e.offsetX/progress.clientWidth)
@@ -321,21 +330,12 @@ if(localStorage.getItem(likedKey))return
 localStorage.setItem(likedKey,'1')
 like.style.color='red'
 await fetch('/api/like/'+v.id,{method:'POST'})
-like.innerHTML='❤️ '+((v.likes||0)+1)
+like.textContent='❤️ '+((v.likes||0)+1)
 }
 })
 }
 
-function toggle(v,p){
-document.querySelectorAll('video').forEach(x=>x!==v&&x.pause())
-if(v.paused){v.play();p.textContent='❚❚'}else{v.pause();p.textContent='▶'}
-}
-
-function share(id){
-const url=location.origin+'/?video='+id
-navigator.share?navigator.share({url}):(navigator.clipboard.writeText(url),alert('Link copiato'))
-}
-
+/* COMMENT */
 async function comment(id,btn){
 const i=document.getElementById('i-'+id)
 if(!i.value.trim())return
@@ -353,7 +353,13 @@ i.value=''
 }
 }
 
-/* APRI VIDEO DA LINK */
+/* SHARE */
+function share(id){
+const url=location.origin+'/?video='+id
+navigator.share?navigator.share({url}):(navigator.clipboard.writeText(url),alert('Link copiato'))
+}
+
+/* OPEN VIDEO FROM LINK */
 const openId=new URLSearchParams(location.search).get('video')
 if(openId){
 setTimeout(()=>{
