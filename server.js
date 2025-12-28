@@ -13,24 +13,16 @@ app.use(express.urlencoded({extended:true,limit:'100mb'}))
 
 const DATA=path.join(__dirname,'data')
 const UPLOADS=path.join(DATA,'uploads')
-const VIDEOS_FILE=path.join(DATA,'videos.json')
+const FILE=path.join(DATA,'videos.json')
 
 if(!fs.existsSync(DATA)) fs.mkdirSync(DATA)
 if(!fs.existsSync(UPLOADS)) fs.mkdirSync(UPLOADS)
+if(!fs.existsSync(FILE)) fs.writeFileSync(FILE,'[]')
 
-function readJSON(){
-  if(!fs.existsSync(VIDEOS_FILE)){
-    fs.writeFileSync(VIDEOS_FILE,'[]')
-    return []
-  }
-  return JSON.parse(fs.readFileSync(VIDEOS_FILE,'utf8')||'[]')
-}
+function load(){return JSON.parse(fs.readFileSync(FILE,'utf8')||'[]')}
+function save(d){fs.writeFileSync(FILE,JSON.stringify(d,null,2))}
 
-function writeJSON(data){
-  fs.writeFileSync(VIDEOS_FILE,JSON.stringify(data,null,2))
-}
-
-let videos=readJSON()
+let videos=load()
 
 const storage=multer.diskStorage({
   destination:(r,f,c)=>c(null,UPLOADS),
@@ -47,16 +39,16 @@ app.use(express.static(path.join(__dirname,'public')))
 app.use('/media',express.static(UPLOADS))
 
 const rate={}
-function canPost(ip){
-  const now=Date.now()
-  if(!rate[ip]){rate[ip]=now;return true}
-  if(now-rate[ip]<4000) return false
-  rate[ip]=now
+function can(ip){
+  const t=Date.now()
+  if(!rate[ip]){rate[ip]=t;return true}
+  if(t-rate[ip]<4000) return false
+  rate[ip]=t
   return true
 }
 
 app.post('/api/upload',upload.single('file'),(req,res)=>{
-  if(!req.file) return res.status(400).json({error:'No file'})
+  if(!req.file) return res.status(400).json({error:'nofile'})
   const v={
     id:Date.now().toString(36),
     filename:req.file.filename,
@@ -66,26 +58,26 @@ app.post('/api/upload',upload.single('file'),(req,res)=>{
     createdAt:new Date().toISOString()
   }
   videos.unshift(v)
-  writeJSON(videos)
-  res.json({success:true})
+  save(videos)
+  res.json({ok:true})
 })
 
 app.get('/api/videos',(req,res)=>{
-  if(videos.length===0) return res.json({videos:[],empty:true})
+  if(!videos.length) return res.json({videos:[],empty:true})
   res.json({videos})
 })
 
 app.post('/api/comment/:id',(req,res)=>{
   const ip=req.headers['x-forwarded-for']||req.socket.remoteAddress
-  if(!canPost(ip)) return res.status(429).json({error:'Too fast'})
+  if(!can(ip)) return res.status(429).json({error:'fast'})
   const v=videos.find(x=>x.id===req.params.id)
-  if(!v) return res.status(404).json({error:'Not found'})
+  if(!v) return res.status(404).json({error:'nf'})
   const t=String(req.body.text||'').trim()
-  if(!t) return res.status(400).json({error:'Empty'})
+  if(!t) return res.status(400).json({error:'empty'})
   const c={id:Date.now(),text:t,createdAt:new Date().toISOString()}
   v.comments.push(c)
-  writeJSON(videos)
-  res.json({success:true,comment:c})
+  save(videos)
+  res.json({ok:true,comment:c})
 })
 
-app.listen(PORT,()=>console.log('SilentNotes Videos running'))
+app.listen(PORT,()=>console.log('SilentNotes Videos online'))
