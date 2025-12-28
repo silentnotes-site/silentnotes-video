@@ -1,175 +1,91 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SilentNotes Videos</title>
+const express=require('express')
+const fs=require('fs')
+const path=require('path')
+const multer=require('multer')
+const cors=require('cors')
 
-<style>
-body{
-margin:0;
-font-family:Inter,Arial;
-background:linear-gradient(135deg,#ff0080,#7928ca,#2afadf);
-background-size:400% 400%;
-animation:bg 20s infinite alternate;
-color:white;
-display:flex;
-flex-direction:column;
-align-items:center;
-}
-@keyframes bg{0%{background-position:0%}100%{background-position:100%}}
+const app=express()
+const PORT=process.env.PORT||3000
 
-h1{margin:20px 0}
+app.use(cors())
+app.use(express.json({limit:'100mb'}))
+app.use(express.urlencoded({extended:true,limit:'100mb'}))
 
-form{
-background:rgba(255,255,255,.15);
-backdrop-filter:blur(10px);
-padding:20px;
-border-radius:20px;
-display:flex;
-flex-direction:column;
-gap:10px;
-width:100%;
-max-width:420px;
+const DATA=path.join(__dirname,'data')
+const UPLOADS=path.join(DATA,'uploads')
+const VIDEOS_FILE=path.join(DATA,'videos.json')
+
+if(!fs.existsSync(DATA)) fs.mkdirSync(DATA)
+if(!fs.existsSync(UPLOADS)) fs.mkdirSync(UPLOADS)
+
+function readJSON(){
+  if(!fs.existsSync(VIDEOS_FILE)){
+    fs.writeFileSync(VIDEOS_FILE,'[]')
+    return []
+  }
+  return JSON.parse(fs.readFileSync(VIDEOS_FILE,'utf8')||'[]')
 }
 
-input,button{
-padding:12px;
-border-radius:12px;
-border:none;
-outline:none;
+function writeJSON(data){
+  fs.writeFileSync(VIDEOS_FILE,JSON.stringify(data,null,2))
 }
 
-button{
-font-weight:700;
-cursor:pointer;
-transition:.3s;
-}
-button:hover{transform:scale(1.05)}
+let videos=readJSON()
 
-#feed{
-margin-top:20px;
-width:100%;
-max-width:420px;
-height:calc(100vh - 300px);
-overflow-y:auto;
-scroll-snap-type:y mandatory;
-}
-
-.videoCard{
-height:100%;
-scroll-snap-align:start;
-display:flex;
-flex-direction:column;
-align-items:center;
-gap:8px;
-}
-
-video{
-width:100%;
-height:70vh;
-object-fit:cover;
-border-radius:20px;
-}
-
-.comment{
-background:rgba(255,255,255,.2);
-padding:6px 10px;
-border-radius:10px;
-margin:3px 0;
-font-size:14px;
-}
-
-.empty{
-text-align:center;
-opacity:.8;
-margin-top:40px;
-}
-</style>
-</head>
-
-<body>
-
-<h1>SilentNotes Videos</h1>
-
-<form id="uploadForm">
-<input type="file" id="file" required>
-<input type="text" id="description" placeholder="Description">
-<input type="text" id="hashtags" placeholder="#hashtags">
-<button>Upload</button>
-</form>
-
-<div id="feed"><div class="empty">Currently no videos</div></div>
-
-<script>
-const feed=document.getElementById('feed')
-
-const observer=new IntersectionObserver(e=>{
-e.forEach(x=>{
-const v=x.target.querySelector('video')
-if(!v)return
-x.isIntersecting?v.play():v.pause()
+const storage=multer.diskStorage({
+  destination:(r,f,c)=>c(null,UPLOADS),
+  filename:(r,f,c)=>{
+    const n=Date.now().toString(36)+Math.random().toString(36).slice(2)
+    const e=path.extname(f.originalname)||'.mp4'
+    c(null,n+e)
+  }
 })
-},{threshold:.75})
 
-async function loadVideos(){
-const r=await fetch('/api/videos')
-const d=await r.json()
-feed.innerHTML=''
-if(d.empty||!d.videos.length){
-feed.innerHTML='<div class="empty">Currently no videos</div>'
-return
+const upload=multer({storage,limits:{fileSize:1024*1024*1024}})
+
+app.use(express.static(path.join(__dirname,'public')))
+app.use('/media',express.static(UPLOADS))
+
+const rate={}
+function canPost(ip){
+  const now=Date.now()
+  if(!rate[ip]){rate[ip]=now;return true}
+  if(now-rate[ip]<4000) return false
+  rate[ip]=now
+  return true
 }
-d.videos.forEach(v=>{
-const c=document.createElement('div')
-c.className='videoCard'
-c.innerHTML=`
-<video src="/media/${v.filename}" playsinline loop controls></video>
-<div>${v.description}</div>
-<div>${v.hashtags}</div>
-<div id="com-${v.id}">
-${v.comments.map(x=>`<div class="comment">${x.text}</div>`).join('')}
-</div>
-<input id="i-${v.id}" placeholder="Anonymous comment">
-<button onclick="comment('${v.id}')">Send</button>
-`
-feed.appendChild(c)
-observer.observe(c)
+
+app.post('/api/upload',upload.single('file'),(req,res)=>{
+  if(!req.file) return res.status(400).json({error:'No file'})
+  const v={
+    id:Date.now().toString(36),
+    filename:req.file.filename,
+    description:String(req.body.description||''),
+    hashtags:String(req.body.hashtags||''),
+    comments:[],
+    createdAt:new Date().toISOString()
+  }
+  videos.unshift(v)
+  writeJSON(videos)
+  res.json({success:true})
 })
-}
 
-async function comment(id){
-const i=document.getElementById('i-'+id)
-const t=i.value.trim()
-if(!t)return
-const r=await fetch('/api/comment/'+id,{
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({text:t})
+app.get('/api/videos',(req,res)=>{
+  if(videos.length===0) return res.json({videos:[],empty:true})
+  res.json({videos})
 })
-const d=await r.json()
-if(d.success){
-document.getElementById('com-'+id)
-.insertAdjacentHTML('beforeend',`<div class="comment">${d.comment.text}</div>`)
-i.value=''
-}
-}
 
-document.getElementById('uploadForm').onsubmit=async e=>{
-e.preventDefault()
-const f=new FormData()
-f.append('file',file.files[0])
-f.append('description',description.value)
-f.append('hashtags',hashtags.value)
-await fetch('/api/upload',{method:'POST',body:f})
-file.value=''
-description.value=''
-hashtags.value=''
-loadVideos()
-}
+app.post('/api/comment/:id',(req,res)=>{
+  const ip=req.headers['x-forwarded-for']||req.socket.remoteAddress
+  if(!canPost(ip)) return res.status(429).json({error:'Too fast'})
+  const v=videos.find(x=>x.id===req.params.id)
+  if(!v) return res.status(404).json({error:'Not found'})
+  const t=String(req.body.text||'').trim()
+  if(!t) return res.status(400).json({error:'Empty'})
+  const c={id:Date.now(),text:t,createdAt:new Date().toISOString()}
+  v.comments.push(c)
+  writeJSON(videos)
+  res.json({success:true,comment:c})
+})
 
-loadVideos()
-</script>
-
-</body>
-</html>
+app.listen(PORT,()=>console.log('SilentNotes Videos running'))
