@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SilentNotes Videos</title>
+
 <style>
 *{box-sizing:border-box}
 body{
@@ -16,8 +17,10 @@ color:white;
 overflow-x:hidden;
 }
 @keyframes bg{0%{background-position:0%}100%{background-position:100%}}
+
 h1{text-align:center;margin:20px 0;font-weight:800}
 #container{max-width:480px;margin:auto;padding-bottom:80px}
+
 #uploadBtn{
 display:flex;
 align-items:center;
@@ -30,46 +33,37 @@ background:white;
 color:black;
 font-weight:700;
 cursor:pointer;
-transition:.25s;
 box-shadow:0 6px 15px rgba(0,0,0,.25);
 }
-#uploadBtn:hover{transform:scale(1.05)}
+
 #feed{
 display:flex;
 flex-direction:column;
 gap:30px;
 padding:0 12px;
 }
+
 .videoCard{
 background:rgba(0,0,0,.25);
 border-radius:26px;
 overflow:hidden;
 backdrop-filter:blur(8px);
-transition:.3s;
 position:relative;
 }
-.fullscreen-player{
-position:fixed;
-top:0;
-left:0;
+
+/* VIDEO */
+.videoCard video{
 width:100%;
-height:100%;
+height:70vh;
+object-fit:cover;
 background:black;
-z-index:9999;
-display:flex;
-flex-direction:column;
-}
-.fullscreen-player video{
-width:100%;
-height:100%;
-object-fit:contain;
 cursor:pointer;
-background:black;
 }
+
 .overlayRight{
 position:absolute;
 right:10px;
-bottom:80px;
+bottom:90px;
 display:flex;
 flex-direction:column;
 gap:14px;
@@ -77,17 +71,14 @@ font-size:14px;
 align-items:center;
 z-index:10;
 }
+
 .action{
 background:rgba(0,0,0,.55);
 padding:10px;
 border-radius:50%;
 cursor:pointer;
-display:flex;
-align-items:center;
-justify-content:center;
-transition:.25s;
 }
-.action:hover{transform:scale(1.2)}
+
 .controls{
 position:absolute;
 bottom:0;
@@ -100,6 +91,7 @@ gap:10px;
 background:linear-gradient(transparent,rgba(0,0,0,.75));
 z-index:10;
 }
+
 .play{
 width:42px;
 height:42px;
@@ -111,9 +103,8 @@ align-items:center;
 justify-content:center;
 font-weight:900;
 cursor:pointer;
-transition:.25s;
 }
-.play:hover{transform:scale(1.1)}
+
 .progress{
 flex:1;
 height:6px;
@@ -122,19 +113,24 @@ border-radius:10px;
 overflow:hidden;
 cursor:pointer;
 }
+
 .bar{
 height:100%;
 width:0%;
 background:white;
-transition:.1s linear;
 }
+
 .meta{
 padding:14px;
 display:flex;
 flex-direction:column;
 gap:6px;
+position:relative;
+z-index:5;
 }
+
 .tags{opacity:.8;font-size:14px}
+
 .comments{
 margin-top:10px;
 display:flex;
@@ -142,22 +138,21 @@ flex-direction:column;
 gap:6px;
 max-height:200px;
 overflow-y:auto;
-position:relative;
-z-index:1;
 }
+
 .comment{
 background:rgba(255,255,255,.18);
 padding:6px 10px;
 border-radius:12px;
 font-size:14px;
 }
+
 .addComment{
 display:flex;
 gap:6px;
 margin-top:8px;
-position:relative;
-z-index:1;
 }
+
 .addComment input{
 flex:1;
 padding:8px 12px;
@@ -165,6 +160,7 @@ border-radius:12px;
 border:none;
 outline:none;
 }
+
 .addComment button{
 padding:8px 14px;
 border:none;
@@ -172,10 +168,9 @@ border-radius:12px;
 background:white;
 color:black;
 cursor:pointer;
-transition:.25s;
 font-weight:700;
 }
-.addComment button:hover{transform:scale(1.05)}
+
 .empty{
 text-align:center;
 opacity:.7;
@@ -183,19 +178,18 @@ margin-top:50px;
 font-size:18px;
 }
 
-/* Modale caricamento video */
+/* MODALE UPLOAD */
 #uploadModal{
 display:none;
 position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
+top:0;left:0;
+width:100%;height:100%;
 background:rgba(0,0,0,.7);
 z-index:10000;
 align-items:center;
 justify-content:center;
 }
+
 #uploadModal .modalContent{
 background:#111;
 padding:20px;
@@ -206,33 +200,21 @@ display:flex;
 flex-direction:column;
 gap:12px;
 }
-#uploadModal h2{
-color:white;
-text-align:center;
-margin:0;
-}
-#uploadModal input[type="text"], #uploadModal input[type="file"]{
+#uploadModal input{
 padding:10px;
 border-radius:12px;
 border:none;
-outline:none;
 }
 #uploadModal .modalBtns{
 display:flex;
 gap:10px;
 justify-content:center;
 }
-#uploadModal button{
-padding:10px 20px;
-border:none;
-border-radius:12px;
-cursor:pointer;
-font-weight:700;
-}
-#uploadModal #cancelUpload{background:red;color:white;}
-#uploadModal #confirmUpload{background:white;color:black;}
+#cancelUpload{background:red;color:white}
+#confirmUpload{background:white;color:black}
 </style>
 </head>
+
 <body>
 
 <h1>SilentNotes Videos</h1>
@@ -242,15 +224,12 @@ font-weight:700;
 <div id="feed"><div class="empty">Nessun video disponibile</div></div>
 </div>
 
-<div id="fullscreenWrapper" style="display:none;"></div>
-
-<!-- Modale caricamento video -->
 <div id="uploadModal">
   <div class="modalContent">
     <h2>Carica Video</h2>
     <input type="file" id="fileInputModal" accept="video/*">
-    <input type="text" id="videoDescriptionModal" placeholder="Scrivi una descrizione virale...">
-    <input type="text" id="videoHashtagsModal" placeholder="#trend #fun #viral">
+    <input type="text" id="videoDescriptionModal" placeholder="Descrizione...">
+    <input type="text" id="videoHashtagsModal" placeholder="#trend #viral">
     <div class="modalBtns">
       <button id="cancelUpload">Annulla</button>
       <button id="confirmUpload">Invia</button>
@@ -261,180 +240,130 @@ font-weight:700;
 <script>
 const feed=document.getElementById('feed')
 const uploadBtn=document.getElementById('uploadBtn')
-const fullscreenWrapper=document.getElementById('fullscreenWrapper')
-
 const uploadModal=document.getElementById('uploadModal')
-const fileInputModal=document.getElementById('fileInputModal')
-const videoDescriptionModal=document.getElementById('videoDescriptionModal')
-const videoHashtagsModal=document.getElementById('videoHashtagsModal')
-const cancelUpload=document.getElementById('cancelUpload')
-const confirmUpload=document.getElementById('confirmUpload')
 
 uploadBtn.onclick=()=>uploadModal.style.display='flex'
-cancelUpload.onclick=()=>{
-    uploadModal.style.display='none'
-    fileInputModal.value=''
-    videoDescriptionModal.value=''
-    videoHashtagsModal.value=''
-}
+cancelUpload.onclick=()=>uploadModal.style.display='none'
 
 confirmUpload.onclick=async()=>{
-    const file=fileInputModal.files[0]
-    if(!file){alert('Seleziona un video!'); return}
-    if(!file.type.startsWith('video/')){alert('Puoi caricare solo video!'); return}
-    const f=new FormData()
-    f.append('file', file)
-    f.append('description', videoDescriptionModal.value)
-    f.append('hashtags', videoHashtagsModal.value)
-    await fetch('/api/upload',{method:'POST',body:f})
-    uploadModal.style.display='none'
-    fileInputModal.value=''
-    videoDescriptionModal.value=''
-    videoHashtagsModal.value=''
-    loadVideos()
+const file=fileInputModal.files[0]
+if(!file||!file.type.startsWith('video/')) return alert('Seleziona un video valido')
+const f=new FormData()
+f.append('file',file)
+f.append('description',videoDescriptionModal.value)
+f.append('hashtags',videoHashtagsModal.value)
+await fetch('/api/upload',{method:'POST',body:f})
+uploadModal.style.display='none'
+loadVideos()
 }
-
-let startY=0
 
 async function loadVideos(){
 const r=await fetch('/api/videos')
 const d=await r.json()
 feed.innerHTML=''
-if(!d.videos||!d.videos.length){
+if(!d.videos?.length){
 feed.innerHTML='<div class="empty">Nessun video disponibile</div>'
 return
 }
+
 d.videos.forEach(v=>{
+const likedKey='liked_'+v.id
 const c=document.createElement('div')
 c.className='videoCard'
-const likesKey='liked_'+v.id
-const liked=localStorage.getItem(likesKey)
 c.innerHTML=`
-<div class="player">
 <video src="/media/${v.filename}" loop playsinline></video>
+
 <div class="overlayRight">
 <div class="action">👁 ${v.views||0}</div>
 <div class="action" onclick="share('${v.id}')">🔗</div>
-<div class="action" id="like-${v.id}" style="color:${liked?'red':'white'}">❤️ ${v.likes||0}</div>
-<div class="action" onclick="toggleFullscreen('${v.id}')">⛶</div>
+<div class="action" id="like-${v.id}" style="color:${localStorage.getItem(likedKey)?'red':'white'}">
+❤️ ${v.likes||0}
 </div>
+</div>
+
 <div class="controls">
 <div class="play">▶</div>
 <div class="progress"><div class="bar"></div></div>
 </div>
-</div>
+
 <div class="meta">
 <div>${v.description||''}</div>
 <div class="tags">${v.hashtags||''}</div>
+
 <div class="comments" id="com-${v.id}">
-${v.comments.map(x=>`<div class="comment">${x.text}</div>`).join('')}
+${(v.comments||[]).map(x=>`<div class="comment">${x.text}</div>`).join('')}
 </div>
+
 <div class="addComment">
 <input id="i-${v.id}" placeholder="Commenta in anonimo">
-<button onclick="comment('${v.id}', this)">Invia</button>
+<button onclick="comment('${v.id}',this)">Invia</button>
 </div>
 </div>
 `
 feed.appendChild(c)
+
 const video=c.querySelector('video')
 const play=c.querySelector('.play')
 const bar=c.querySelector('.bar')
 const progress=c.querySelector('.progress')
-play.onclick=()=>{if(video.paused){video.play();play.textContent='❚❚'}else{video.pause();play.textContent='▶'}}
-video.ontimeupdate=()=>{bar.style.width=(video.currentTime/video.duration*100||0)+'%'}
-progress.onclick=e=>{video.currentTime=video.duration*(e.offsetX/progress.clientWidth)}
-video.onclick=()=>{if(video.paused){video.play();play.textContent='❚❚'}else{video.pause();play.textContent='▶'}}
-video.addEventListener('play',()=>{fetch('/api/view/'+v.id,{method:'POST'})})
-const likeBtn=document.getElementById('like-'+v.id)
-likeBtn.onclick=async()=>{
-if(localStorage.getItem(likesKey))return
-localStorage.setItem(likesKey,'1')
-likeBtn.style.color='red'
+
+play.onclick=()=>toggle(video,play)
+video.onclick=()=>toggle(video,play)
+
+video.ontimeupdate=()=>bar.style.width=(video.currentTime/video.duration*100||0)+'%'
+progress.onclick=e=>video.currentTime=video.duration*(e.offsetX/progress.clientWidth)
+
+video.onplay=()=>fetch('/api/view/'+v.id,{method:'POST'})
+
+const like=document.getElementById('like-'+v.id)
+like.onclick=async()=>{
+if(localStorage.getItem(likedKey))return
+localStorage.setItem(likedKey,'1')
+like.style.color='red'
 await fetch('/api/like/'+v.id,{method:'POST'})
-let count=parseInt(likeBtn.textContent.replace(/\D/g,''))||0
-likeBtn.textContent='❤️ '+(count+1)
+like.innerHTML='❤️ '+((v.likes||0)+1)
 }
 })
 }
 
-function toggleFullscreen(videoId){
-const origCard=[...document.querySelectorAll('.videoCard')].find(c=>c.querySelector(`#like-${videoId}`))
-if(!origCard) return
-const origVideo=origCard.querySelector('video')
-const clone=origVideo.cloneNode(true)
-clone.controls=false
-clone.loop=false
-clone.autoplay=true
-
-fullscreenWrapper.innerHTML=''
-const wrapper=document.createElement('div')
-wrapper.className='fullscreen-player'
-wrapper.appendChild(clone)
-
-const controls=document.createElement('div')
-controls.className='controls'
-controls.innerHTML=`<div class="play">❚❚</div><div class="progress"><div class="bar"></div></div>`
-wrapper.appendChild(controls)
-fullscreenWrapper.appendChild(wrapper)
-fullscreenWrapper.style.display='flex'
-
-const playBtn=controls.querySelector('.play')
-const bar=controls.querySelector('.bar')
-const progress=controls.querySelector('.progress')
-
-playBtn.onclick=()=>{if(clone.paused){clone.play();playBtn.textContent='❚❚'}else{clone.pause();playBtn.textContent='▶'}}
-clone.ontimeupdate=()=>{bar.style.width=(clone.currentTime/clone.duration*100||0)+'%'}
-progress.onclick=e=>{clone.currentTime=clone.duration*(e.offsetX/progress.clientWidth)}
-
-wrapper.addEventListener('click', e=>{
-if(e.target===wrapper) closeFullscreen()
-})
-
-document.addEventListener('keydown', e=>{if(e.key==='Escape') closeFullscreen()},{once:true})
-}
-
-function closeFullscreen(){
-fullscreenWrapper.style.display='none'
-fullscreenWrapper.innerHTML=''
+function toggle(v,p){
+document.querySelectorAll('video').forEach(x=>x!==v&&x.pause())
+if(v.paused){v.play();p.textContent='❚❚'}else{v.pause();p.textContent='▶'}
 }
 
 function share(id){
-const url=location.origin+'/video/'+id
-if(navigator.share){
-navigator.share({url})
-}else{
-navigator.clipboard.writeText(url)
-alert('Link copiato')
-}
+const url=location.origin+'/?video='+id
+navigator.share?navigator.share({url}):(navigator.clipboard.writeText(url),alert('Link copiato'))
 }
 
-async function comment(id, btn){
+async function comment(id,btn){
 const i=document.getElementById('i-'+id)
-const t=i.value.trim()
-if(!t) return
+if(!i.value.trim())return
 btn.disabled=true
-const r=await fetch('/api/comment/'+id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})})
+const r=await fetch('/api/comment/'+id,{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({text:i.value})
+})
 btn.disabled=false
 const d=await r.json()
 if(d.ok){
-const comEl=document.getElementById('com-'+id)
-const newComment=document.createElement('div')
-newComment.className='comment'
-newComment.textContent=d.comment.text
-comEl.appendChild(newComment)
+document.getElementById('com-'+id).innerHTML+=`<div class="comment">${d.comment.text}</div>`
 i.value=''
-comEl.scrollTop=comEl.scrollHeight
 }
 }
 
-document.addEventListener('touchstart', e=>startY=e.touches[0].clientY)
-document.addEventListener('touchend', e=>{
-const endY=e.changedTouches[0].clientY
-if(startY-endY>80) window.scrollBy({top:window.innerHeight,behavior:'smooth'})
-if(endY-startY>80) window.scrollBy({top:-window.innerHeight,behavior:'smooth'})
-})
+/* APRI VIDEO DA LINK */
+const openId=new URLSearchParams(location.search).get('video')
+if(openId){
+setTimeout(()=>{
+const el=document.getElementById('like-'+openId)
+if(el) el.closest('.videoCard').scrollIntoView({behavior:'smooth'})
+},600)
+}
 
 loadVideos()
 </script>
+
 </body>
 </html>
