@@ -34,16 +34,6 @@ transition:.25s;
 box-shadow:0 6px 15px rgba(0,0,0,.25);
 }
 #uploadBtn:hover{transform:scale(1.05)}
-#videoDescription,#videoHashtags{
-width:80%;
-margin:5px auto;
-padding:10px 14px;
-border-radius:12px;
-border:none;
-outline:none;
-display:block;
-font-size:14px;
-}
 #feed{
 display:flex;
 flex-direction:column;
@@ -152,6 +142,8 @@ flex-direction:column;
 gap:6px;
 max-height:200px;
 overflow-y:auto;
+position:relative;
+z-index:1;
 }
 .comment{
 background:rgba(255,255,255,.18);
@@ -163,6 +155,8 @@ font-size:14px;
 display:flex;
 gap:6px;
 margin-top:8px;
+position:relative;
+z-index:1;
 }
 .addComment input{
 flex:1;
@@ -188,6 +182,55 @@ opacity:.7;
 margin-top:50px;
 font-size:18px;
 }
+
+/* Modale caricamento video */
+#uploadModal{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.7);
+z-index:10000;
+align-items:center;
+justify-content:center;
+}
+#uploadModal .modalContent{
+background:#111;
+padding:20px;
+border-radius:20px;
+width:90%;
+max-width:400px;
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+#uploadModal h2{
+color:white;
+text-align:center;
+margin:0;
+}
+#uploadModal input[type="text"], #uploadModal input[type="file"]{
+padding:10px;
+border-radius:12px;
+border:none;
+outline:none;
+}
+#uploadModal .modalBtns{
+display:flex;
+gap:10px;
+justify-content:center;
+}
+#uploadModal button{
+padding:10px 20px;
+border:none;
+border-radius:12px;
+cursor:pointer;
+font-weight:700;
+}
+#uploadModal #cancelUpload{background:red;color:white;}
+#uploadModal #confirmUpload{background:white;color:black;}
 </style>
 </head>
 <body>
@@ -195,38 +238,60 @@ font-size:18px;
 <h1>SilentNotes Videos</h1>
 
 <div id="container">
-
-<input type="text" id="videoDescription" placeholder="Scrivi una descrizione virale...">
-<input type="text" id="videoHashtags" placeholder="#trend #fun #viral">
 <button id="uploadBtn">Carica un Video</button>
-<input type="file" id="fileInput" accept="video/*" style="display:none">
-
 <div id="feed"><div class="empty">Nessun video disponibile</div></div>
-
 </div>
 
 <div id="fullscreenWrapper" style="display:none;"></div>
 
+<!-- Modale caricamento video -->
+<div id="uploadModal">
+  <div class="modalContent">
+    <h2>Carica Video</h2>
+    <input type="file" id="fileInputModal" accept="video/*">
+    <input type="text" id="videoDescriptionModal" placeholder="Scrivi una descrizione virale...">
+    <input type="text" id="videoHashtagsModal" placeholder="#trend #fun #viral">
+    <div class="modalBtns">
+      <button id="cancelUpload">Annulla</button>
+      <button id="confirmUpload">Invia</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const feed=document.getElementById('feed')
 const uploadBtn=document.getElementById('uploadBtn')
-const fileInput=document.getElementById('fileInput')
 const fullscreenWrapper=document.getElementById('fullscreenWrapper')
-const videoDescription=document.getElementById('videoDescription')
-const videoHashtags=document.getElementById('videoHashtags')
 
-uploadBtn.onclick=()=>fileInput.click()
-fileInput.onchange=async()=>{
-if(!fileInput.files[0])return
-const f=new FormData()
-f.append('file',fileInput.files[0])
-f.append('description',videoDescription.value)
-f.append('hashtags',videoHashtags.value)
-await fetch('/api/upload',{method:'POST',body:f})
-fileInput.value=''
-videoDescription.value=''
-videoHashtags.value=''
-loadVideos()
+const uploadModal=document.getElementById('uploadModal')
+const fileInputModal=document.getElementById('fileInputModal')
+const videoDescriptionModal=document.getElementById('videoDescriptionModal')
+const videoHashtagsModal=document.getElementById('videoHashtagsModal')
+const cancelUpload=document.getElementById('cancelUpload')
+const confirmUpload=document.getElementById('confirmUpload')
+
+uploadBtn.onclick=()=>uploadModal.style.display='flex'
+cancelUpload.onclick=()=>{
+    uploadModal.style.display='none'
+    fileInputModal.value=''
+    videoDescriptionModal.value=''
+    videoHashtagsModal.value=''
+}
+
+confirmUpload.onclick=async()=>{
+    const file=fileInputModal.files[0]
+    if(!file){alert('Seleziona un video!'); return}
+    if(!file.type.startsWith('video/')){alert('Puoi caricare solo video!'); return}
+    const f=new FormData()
+    f.append('file', file)
+    f.append('description', videoDescriptionModal.value)
+    f.append('hashtags', videoHashtagsModal.value)
+    await fetch('/api/upload',{method:'POST',body:f})
+    uploadModal.style.display='none'
+    fileInputModal.value=''
+    videoDescriptionModal.value=''
+    videoHashtagsModal.value=''
+    loadVideos()
 }
 
 let startY=0
