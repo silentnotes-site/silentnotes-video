@@ -67,18 +67,21 @@ function normalizeTags(t) {
       .map(x => x.trim())
       .filter(x => x)
       .map(x => x.startsWith('#') ? x : '#' + x)
-  )].slice(0, 8)
+  )].slice(0, 12)
 }
 
 const viewed = new Map()
-const liked = new Map()
+const liked = new Set()
 function touchMap(map, key) { map.set(key, Date.now()) }
 function hasMap(map, key) { return map.has(key) }
 setInterval(() => {
   const cutoff = Date.now() - 1000 * 60 * 60 * 24
   for (const [k, v] of viewed) if (v < cutoff) viewed.delete(k)
-  for (const [k, v] of liked) if (v < cutoff) liked.delete(k)
 }, 1000 * 60 * 60)
+
+const fetchFn = (globalThis.fetch && typeof globalThis.fetch === 'function')
+  ? globalThis.fetch.bind(globalThis)
+  : (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
 
 function getIp(req) {
   const xf = req.headers['x-forwarded-for']
@@ -107,11 +110,11 @@ app.post('/auth/register', async (req, res) => {
     if (users.find(u => u.username.toLowerCase() === username.toLowerCase())) return res.status(409).json({ error: 'exists' })
     const salt = await bcrypt.genSalt(10)
     const hash = await bcrypt.hash(password, salt)
-    const user = { id: uuidv4(), username, displayName, passwordHash: hash, createdAt: new Date().toISOString(), banned: false }
+    const user = { id: uuidv4(), username, displayName, passwordHash: hash, createdAt: new Date().toISOString(), banned: false, avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=111111&color=ffffff` }
     users.push(user)
     saveJson(USERS_FILE, users)
-    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '30d' })
-    res.json({ ok: true, token, user: { id: user.id, username: user.username, displayName: user.displayName } })
+    const token = jwt.sign({ id: user.id, username: user.username, displayName: user.displayName }, JWT_SECRET, { expiresIn: '30d' })
+    res.json({ ok: true, token, user: { id: user.id, username: user.username, displayName: user.displayName, avatar: user.avatar } })
   } catch (e) { res.status(500).json({ error: 'server' }) }
 })
 
@@ -124,8 +127,8 @@ app.post('/auth/login', async (req, res) => {
     const ok = await bcrypt.compare(password, user.passwordHash)
     if (!ok) return res.status(401).json({ error: 'invalid' })
     if (user.banned) return res.status(403).json({ error: 'banned' })
-    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '30d' })
-    res.json({ ok: true, token, user: { id: user.id, username: user.username, displayName: user.displayName } })
+    const token = jwt.sign({ id: user.id, username: user.username, displayName: user.displayName }, JWT_SECRET, { expiresIn: '30d' })
+    res.json({ ok: true, token, user: { id: user.id, username: user.username, displayName: user.displayName, avatar: user.avatar } })
   } catch (e) { res.status(500).json({ error: 'server' }) }
 })
 
@@ -140,15 +143,21 @@ app.get('/auth/get-user/:username', (req, res) => {
   const username = String(req.params.username || '')
   const u = users.find(x => x.username.toLowerCase() === username.toLowerCase())
   if (!u) return res.status(404).json({ error: 'nf' })
-  res.json({ id: u.id, username: u.username, displayName: u.displayName, createdAt: u.createdAt, banned: !!u.banned })
+  res.json({ id: u.id, username: u.username, displayName: u.displayName, createdAt: u.createdAt, banned: !!u.banned, avatar: u.avatar })
 })
 
 app.post('/api/upload', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'nofile' })
+  let authorObj = {}
+  try {
+    const a = req.body.author || ''
+    const aDisplay = req.body.authorDisplay || ''
+    authorObj = a ? { username: String(a), displayName: String(aDisplay || a), avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(String(aDisplay || a))}&background=111111&color=ffffff` } : { username: 'anon', displayName: 'Anon', avatar: `https://ui-avatars.com/api/?name=Anon&background=111111&color=ffffff` }
+  } catch (e) { authorObj = { username: 'anon', displayName: 'Anon', avatar: `https://ui-avatars.com/api/?name=Anon&background=111111&color=ffffff` } }
   const v = {
     id: Date.now().toString(36),
     filename: req.file.filename,
-    author: String(req.body.author || ''),
+    author: authorObj,
     description: String(req.body.description || ''),
     hashtags: normalizeTags(req.body.hashtags),
     comments: [],
@@ -176,7 +185,7 @@ app.post('/api/view/:id', (req, res) => {
   const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim()
   const key = ip + '_' + req.params.id + '_view'
   if (viewed.has(key)) return res.json({ ok: true })
-  touchMap(viewed, key)
+  viewed.set(key, Date.now())
   const v = videos.find(x => x.id === req.params.id)
   if (v) { v.views = (v.views || 0) + 1; saveJson(VIDEOS_FILE, videos) }
   res.json({ ok: true })
@@ -189,7 +198,10 @@ app.post('/api/comment/:id', (req, res) => {
   if (!v) return res.status(404).json({ error: 'nf' })
   const t = String(req.body.text || '').trim()
   if (!t) return res.status(400).json({ error: 'empty' })
-  const c = { id: Date.now(), username: String(req.body.username || ''), text: t, createdAt: new Date().toISOString() }
+  const username = String(req.body.username || 'anon')
+  const displayName = String(req.body.displayName || username)
+  const avatar = String(req.body.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=111111&color=ffffff`)
+  const c = { id: Date.now(), user: { username, displayName, avatar }, text: t, createdAt: new Date().toISOString() }
   v.comments.push(c)
   saveJson(VIDEOS_FILE, videos)
   res.json({ ok: true, comment: c })
