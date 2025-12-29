@@ -15,8 +15,6 @@
     "cors": "^2.8.5",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
-    "uuid": "^9.0.1",
-    "node-fetch": "^3.4.1"
+    "uuid": "^9.0.1"
   }
 }
-
