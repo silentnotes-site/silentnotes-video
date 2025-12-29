@@ -1,188 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SilentNotes Videos</title>
-
 <style>
 *{box-sizing:border-box}
-body{
-margin:0;
-font-family:Inter,Arial;
-background:linear-gradient(135deg,#ff0080,#7928ca,#2afadf);
-background-size:400% 400%;
-animation:bg 18s infinite alternate;
-color:white;
-}
-
+body{margin:0;font-family:Inter,Arial;background:linear-gradient(135deg,#ff0080,#7928ca,#2afadf);background-size:400% 400%;animation:bg 18s infinite alternate;color:white}
 @keyframes bg{0%{background-position:0%}100%{background-position:100%}}
-
 .hidden{display:none}
-
 h1{text-align:center;margin:20px 0}
-
-#container{
-max-width:480px;
-margin:auto;
-padding-bottom:80px;
-}
-
-form{
-background:rgba(255,255,255,.15);
-backdrop-filter:blur(12px);
-padding:18px;
-border-radius:22px;
-display:flex;
-flex-direction:column;
-gap:10px;
-margin:12px;
-}
-
-input,button{
-padding:12px;
-border-radius:14px;
-border:none;
-outline:none;
-font-size:15px;
-}
-
-button{
-font-weight:700;
-cursor:pointer;
-background:white;
-color:black;
-}
-
-#feed{
-display:flex;
-flex-direction:column;
-gap:30px;
-padding:0 12px;
-}
-
-.videoCard{
-background:rgba(0,0,0,.25);
-border-radius:26px;
-overflow:hidden;
-}
-
-.player{
-position:relative;
-width:100%;
-height:85vh;
-background:black;
-}
-
-.player video{
-width:100%;
-height:100%;
-object-fit:cover;
-}
-
-.overlayRight{
-position:absolute;
-right:10px;
-bottom:90px;
-display:flex;
-flex-direction:column;
-gap:14px;
-font-size:14px;
-align-items:center;
-}
-
-.action{
-background:rgba(0,0,0,.6);
-padding:10px;
-border-radius:50%;
-cursor:pointer;
-text-align:center;
-}
-
-.meta{
-padding:14px;
-display:flex;
-flex-direction:column;
-gap:6px;
-}
-
-.author{
-display:flex;
-align-items:center;
-gap:8px;
-cursor:pointer;
-}
-
-.author img{
-width:32px;
-height:32px;
-border-radius:50%;
-}
-
-.comments{
-margin-top:8px;
-display:flex;
-flex-direction:column;
-gap:6px;
-}
-
-.comment{
-background:rgba(255,255,255,.18);
-padding:6px 10px;
-border-radius:12px;
-font-size:14px;
-}
-
-.addComment{
-display:flex;
-gap:6px;
-margin-top:6px;
-}
-
+#container{max-width:480px;margin:auto;padding-bottom:80px}
+form{background:rgba(255,255,255,.15);backdrop-filter:blur(12px);padding:18px;border-radius:22px;display:flex;flex-direction:column;gap:10px;margin:12px}
+input,button{padding:12px;border-radius:14px;border:none;outline:none;font-size:15px}
+button{font-weight:700;cursor:pointer;background:white;color:black}
+#feed{display:flex;flex-direction:column;gap:30px;padding:0 12px}
+.videoCard{background:rgba(0,0,0,.25);border-radius:26px;overflow:hidden}
+.player{position:relative;width:100%;height:85vh;background:black}
+.player video{width:100%;height:100%;object-fit:cover}
+.overlayRight{position:absolute;right:10px;bottom:90px;display:flex;flex-direction:column;gap:14px;font-size:14px;align-items:center}
+.action{background:rgba(0,0,0,.6);padding:10px;border-radius:50%;cursor:pointer;text-align:center}
+.meta{padding:14px;display:flex;flex-direction:column;gap:6px}
+.author{display:flex;align-items:center;gap:8px;cursor:pointer}
+.author img{width:32px;height:32px;border-radius:50%}
+.comments{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.comment{background:rgba(255,255,255,.18);padding:6px 10px;border-radius:12px;font-size:14px}
+.addComment{display:flex;gap:6px;margin-top:6px}
 .addComment input{flex:1}
-
-.menu{
-position:fixed;
-top:10px;
-right:10px;
-display:flex;
-gap:8px;
-}
-
-.menu button{
-padding:8px 12px;
-border-radius:12px;
-}
-
-.empty{
-text-align:center;
-opacity:.7;
-margin-top:50px;
-}
+.menu{position:fixed;top:10px;right:10px;display:flex;gap:8px}
+.menu button{padding:8px 12px;border-radius:12px}
+.empty{text-align:center;opacity:.7;margin-top:50px}
+.toggle{display:flex;gap:8px;justify-content:center;margin-bottom:8px}
+.linkbtn{background:transparent;color:white;border:1px solid rgba(255,255,255,.2);padding:8px 12px;border-radius:12px;cursor:pointer}
 </style>
 </head>
-
 <body>
 
-<div id="login">
+<div id="auth">
 <h1>SilentNotes</h1>
-<form id="loginForm">
-<input id="username" placeholder="Username" required>
-<input id="password" type="password" placeholder="Password" required>
-<button>Login</button>
-<div style="text-align:center;font-size:14px">
-<a href="https://silentnotes.cleverapps.io/" style="color:white">
-Don’t have an account? Register on SilentNotes
-</a>
+<div class="toggle">
+<button id="showLogin" class="linkbtn">Accedi</button>
+<button id="showRegister" class="linkbtn">Registrati</button>
 </div>
+
+<form id="loginForm">
+<input id="loginUsername" placeholder="Username" required>
+<input id="loginPassword" type="password" placeholder="Password" required>
+<button type="submit">Login</button>
 <div id="loginError" style="color:#ffcccc;text-align:center"></div>
+</form>
+
+<form id="registerForm" class="hidden">
+<input id="regUsername" placeholder="Username" required>
+<input id="regDisplay" placeholder="Nome visualizzato (opzionale)">
+<input id="regPassword" type="password" placeholder="Password" required>
+<button type="submit">Crea account</button>
+<div id="regError" style="color:#ffcccc;text-align:center"></div>
 </form>
 </div>
 
 <div id="home" class="hidden">
 <div class="menu">
-<button id="profileBtn">View profile</button>
-<button onclick="logout()">Logout</button>
+<button id="profileBtn">Profilo</button>
+<button id="logoutBtn">Logout</button>
 </div>
 
 <h1>SilentNotes Videos</h1>
@@ -201,121 +81,157 @@ Don’t have an account? Register on SilentNotes
 </div>
 
 <script>
-let session=null
-let currentUser=null
-
 const avatarDefault="https://th.bing.com/th/id/OIP.pdgwLL8oxjSs9n4AV66x5wHaHa?o=7&rm=3&rs=1&pid=ImgDetMain"
+let token = localStorage.getItem('sn_token')
+let currentUser = localStorage.getItem('sn_user') || null
+const authDiv = document.getElementById('auth')
+const homeDiv = document.getElementById('home')
+const loginForm = document.getElementById('loginForm')
+const registerForm = document.getElementById('registerForm')
+const loginError = document.getElementById('loginError')
+const regError = document.getElementById('regError')
+const showLogin = document.getElementById('showLogin')
+const showRegister = document.getElementById('showRegister')
+const profileBtn = document.getElementById('profileBtn')
+const logoutBtn = document.getElementById('logoutBtn')
 
-loginForm.onsubmit=async e=>{
-e.preventDefault()
-loginError.textContent=''
-const r=await fetch('/auth/login',{
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({
-username:username.value,
-password:password.value
-})
-})
-const d=await r.json()
-if(!r.ok){
-loginError.textContent=d.error||'Login failed'
-return
-}
-session=d.sessionToken
-currentUser=username.value
-document.getElementById('login').classList.add('hidden')
-document.getElementById('home').classList.remove('hidden')
-profileBtn.onclick=()=>location.href=`https://silentnotes.cleverapps.io/${currentUser}/ask`
-loadVideos()
+if (token && currentUser) {
+  authDiv.classList.add('hidden')
+  homeDiv.classList.remove('hidden')
+  loadVideos()
+} else {
+  authDiv.classList.remove('hidden')
+  homeDiv.classList.add('hidden')
 }
 
-function logout(){
-session=null
-location.reload()
+showLogin.onclick = ()=>{ loginForm.classList.remove('hidden'); registerForm.classList.add('hidden') }
+showRegister.onclick = ()=>{ registerForm.classList.remove('hidden'); loginForm.classList.add('hidden') }
+
+loginForm.onsubmit = async e => {
+  e.preventDefault()
+  loginError.textContent = ''
+  const u = document.getElementById('loginUsername').value
+  const p = document.getElementById('loginPassword').value
+  const r = await fetch('/auth/login', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ username: u, password: p })
+  })
+  const d = await r.json()
+  if (!r.ok) { loginError.textContent = d.error || 'Login fallito'; return }
+  token = d.token
+  currentUser = d.user.username
+  localStorage.setItem('sn_token', token)
+  localStorage.setItem('sn_user', currentUser)
+  authDiv.classList.add('hidden')
+  homeDiv.classList.remove('hidden')
+  loadVideos()
 }
+
+registerForm.onsubmit = async e => {
+  e.preventDefault()
+  regError.textContent = ''
+  const u = document.getElementById('regUsername').value
+  const p = document.getElementById('regPassword').value
+  const dname = document.getElementById('regDisplay').value
+  const r = await fetch('/auth/register', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ username: u, password: p, displayName: dname })
+  })
+  const data = await r.json()
+  if (!r.ok) { regError.textContent = data.error || 'Registrazione fallita'; return }
+  token = data.token
+  currentUser = data.user.username
+  localStorage.setItem('sn_token', token)
+  localStorage.setItem('sn_user', currentUser)
+  authDiv.classList.add('hidden')
+  homeDiv.classList.remove('hidden')
+  loadVideos()
+}
+
+logoutBtn.onclick = ()=>{ localStorage.removeItem('sn_token'); localStorage.removeItem('sn_user'); token = null; currentUser = null; location.reload() }
+profileBtn.onclick = ()=>{ if (currentUser) location.href = `https://silentnotes.cleverapps.io/${currentUser}/ask` }
 
 async function loadVideos(){
-const r=await fetch('/api/videos')
-const d=await r.json()
-feed.innerHTML=''
-if(!d.videos.length){
-feed.innerHTML='<div class="empty">No videos</div>'
-return
-}
-d.videos.forEach(v=>{
-const c=document.createElement('div')
-c.className='videoCard'
-c.innerHTML=`
-<div class="player">
-<video src="/media/${v.filename}" loop playsinline></video>
-<div class="overlayRight">
-<div class="action">👁 ${v.views||0}</div>
-<div class="action" onclick="like('${v.id}',this)">❤️ ${v.likes||0}</div>
-</div>
-</div>
-<div class="meta">
-<div class="author" onclick="goProfile('${v.author||''}')">
-<img src="${avatarDefault}">
-<div>${v.author||'User'}</div>
-</div>
-<div>${v.description||''}</div>
-<div>${(v.hashtags||[]).join(' ')}</div>
-<div class="comments" id="c-${v.id}">
-${v.comments.map(x=>`<div class="comment">${x.text}</div>`).join('')}
-</div>
-<div class="addComment">
-<input id="i-${v.id}" placeholder="Add comment">
-<button onclick="comment('${v.id}')">Send</button>
-</div>
-</div>`
-feed.appendChild(c)
-
-const video=c.querySelector('video')
-video.onclick=()=>video.paused?video.play():video.pause()
-video.onplay=()=>fetch('/api/view/'+v.id,{method:'POST'})
-})
-}
-
-function goProfile(u){
-if(u) location.href=`https://silentnotes.cleverapps.io/${u}/ask`
-}
-
-async function like(id,el){
-const r=await fetch('/api/like/'+id,{method:'POST'})
-const d=await r.json()
-el.innerHTML=`❤️ ${d.likes}`
-}
-
-async function comment(id){
-const i=document.getElementById('i-'+id)
-if(!i.value.trim())return
-const r=await fetch('/api/comment/'+id,{
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({text:i.value})
-})
-const d=await r.json()
-if(d.ok){
-document.getElementById('c-'+id)
-.insertAdjacentHTML('beforeend',`<div class="comment">${d.comment.text}</div>`)
-i.value=''
-}
+  const r = await fetch('/api/videos')
+  const d = await r.json()
+  const feed = document.getElementById('feed')
+  feed.innerHTML = ''
+  if (!d.videos.length) { feed.innerHTML = '<div class="empty">No videos</div>'; return }
+  d.videos.forEach(v=>{
+    const c = document.createElement('div')
+    c.className = 'videoCard'
+    c.innerHTML = `
+      <div class="player">
+        <video src="/media/${v.filename}" loop playsinline></video>
+        <div class="overlayRight">
+          <div class="action">👁 ${v.views||0}</div>
+          <div class="action likeBtn" data-id="${v.id}">❤️ ${v.likes||0}</div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="author" data-user="${v.author||''}">
+          <img src="${avatarDefault}">
+          <div>${v.author||'User'}</div>
+        </div>
+        <div>${v.description||''}</div>
+        <div>${(v.hashtags||[]).join(' ')}</div>
+        <div class="comments" id="c-${v.id}">
+          ${v.comments.map(x=>`<div class="comment">${x.text}</div>`).join('')}
+        </div>
+        <div class="addComment">
+          <input id="i-${v.id}" placeholder="Add comment">
+          <button data-id="${v.id}" class="sendComment">Send</button>
+        </div>
+      </div>`
+    feed.appendChild(c)
+    const video = c.querySelector('video')
+    video.onclick = ()=>video.paused?video.play():video.pause()
+    video.onplay = ()=>fetch('/api/view/'+v.id,{method:'POST'})
+    c.querySelector('.author').onclick = ()=>{ const u = c.querySelector('.author').getAttribute('data-user'); if (u) location.href=`https://silentnotes.cleverapps.io/${u}/ask` }
+    c.querySelector('.likeBtn').onclick = async (ev) => {
+      const id = ev.currentTarget.getAttribute('data-id')
+      const r = await fetch('/api/like/'+id,{method:'POST'})
+      const dd = await r.json()
+      ev.currentTarget.innerHTML = `❤️ ${dd.likes}`
+    }
+    c.querySelector('.sendComment').onclick = async (ev) => {
+      const id = ev.currentTarget.getAttribute('data-id')
+      const i = document.getElementById('i-'+id)
+      if (!i.value.trim()) return
+      const r = await fetch('/api/comment/'+id,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ text: i.value, username: currentUser || '' })
+      })
+      const dd = await r.json()
+      if (dd.ok) {
+        document.getElementById('c-'+id).insertAdjacentHTML('beforeend', `<div class="comment">${dd.comment.text}</div>`)
+        i.value = ''
+      }
+    }
+  })
 }
 
-uploadForm.onsubmit=async e=>{
-e.preventDefault()
-const f=new FormData()
-f.append('file',file.files[0])
-f.append('description',description.value)
-f.append('hashtags',hashtags.value)
-await fetch('/api/upload',{method:'POST',body:f})
-file.value=''
-description.value=''
-hashtags.value=''
-loadVideos()
+const uploadForm = document.getElementById('uploadForm')
+uploadForm.onsubmit = async e => {
+  e.preventDefault()
+  const f = new FormData()
+  const file = document.getElementById('file').files[0]
+  if (!file) return
+  f.append('file', file)
+  f.append('description', document.getElementById('description').value)
+  f.append('hashtags', document.getElementById('hashtags').value)
+  f.append('author', currentUser || '')
+  await fetch('/api/upload',{method:'POST',body:f})
+  document.getElementById('file').value=''
+  document.getElementById('description').value=''
+  document.getElementById('hashtags').value=''
+  loadVideos()
 }
 </script>
 
 </body>
 </html>
+
