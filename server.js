@@ -58,6 +58,53 @@ function normalizeTags(t) {
 }
 
 const viewed = new Set()
+const liked = new Set()
+
+const fetchFn = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
+
+app.post('/auth/login', async (req, res) => {
+  try {
+    const r = await fetchFn('https://silentnotes.cleverapps.io/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': req.headers['user-agent'] || ''
+      },
+      body: JSON.stringify(req.body)
+    })
+    const text = await r.text()
+    try {
+      const json = JSON.parse(text)
+      res.status(r.status).json(json)
+    } catch {
+      res.status(r.status).send(text)
+    }
+  } catch (e) {
+    res.status(500).json({ error: 'login_proxy_failed' })
+  }
+})
+
+app.get('/auth/ban-status/:code', async (req, res) => {
+  try {
+    const r = await fetchFn(`https://silentnotes.cleverapps.io/ban-status/${encodeURIComponent(req.params.code)}`)
+    const json = await r.json()
+    res.json(json)
+  } catch (e) {
+    res.json({ banned: false })
+  }
+})
+
+app.get('/auth/get-user/:username', async (req, res) => {
+  try {
+    const headers = {}
+    if (req.headers.authorization) headers.Authorization = req.headers.authorization
+    const r = await fetchFn(`https://silentnotes.cleverapps.io/get-user/${encodeURIComponent(req.params.username)}`, { headers })
+    const json = await r.json()
+    res.json(json)
+  } catch (e) {
+    res.status(500).json({ error: 'user_proxy_failed' })
+  }
+})
 
 // Upload video
 app.post('/api/upload', upload.single('file'), (req, res) => {
@@ -65,6 +112,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
   const v = {
     id: Date.now().toString(36),
     filename: req.file.filename,
+    author: String(req.body.author || ''),
     description: String(req.body.description || ''),
     hashtags: normalizeTags(req.body.hashtags),
     comments: [],
@@ -74,7 +122,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
   }
   videos.unshift(v)
   save(videos)
-  res.json({ ok: true })
+  res.json({ ok: true, video: v })
 })
 
 // Get all videos
@@ -92,45 +140,50 @@ app.get('/api/video/:id', (req, res) => {
 
 // Increment views
 app.post('/api/view/:id', (req, res) => {
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const key = ip + '_' + req.params.id
+  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim()
+  const key = ip + '_' + req.params.id + '_view'
   if (viewed.has(key)) return res.json({ ok: true })
   viewed.add(key)
   const v = videos.find(x => x.id === req.params.id)
-  if (v) { v.views++; save(videos) }
+  if (v) { v.views = (v.views || 0) + 1; save(videos) }
   res.json({ ok: true })
 })
 
 // Comment
 app.post('/api/comment/:id', (req, res) => {
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim()
   if (!can(ip)) return res.status(429).json({ error: 'fast' })
   const v = videos.find(x => x.id === req.params.id)
   if (!v) return res.status(404).json({ error: 'nf' })
   const t = String(req.body.text || '').trim()
   if (!t) return res.status(400).json({ error: 'empty' })
-  const c = { id: Date.now(), text: t, createdAt: new Date().toISOString() }
+  const c = { id: Date.now(), username: String(req.body.username || ''), text: t, createdAt: new Date().toISOString() }
   v.comments.push(c)
   save(videos)
   res.json({ ok: true, comment: c })
 })
 
-// Like video
+// Like toggle (per IP + video)
 app.post('/api/like/:id', (req, res) => {
-  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim()
   const key = ip + '_' + req.params.id + '_like'
-  if (viewed.has(key)) return res.json({ ok: true })
-  viewed.add(key)
   const v = videos.find(x => x.id === req.params.id)
   if (!v) return res.status(404).json({ error: 'nf' })
+  if (liked.has(key)) {
+    liked.delete(key)
+    v.likes = Math.max(0, (v.likes || 1) - 1)
+    save(videos)
+    return res.json({ ok: true, liked: false, likes: v.likes })
+  }
+  liked.add(key)
   v.likes = (v.likes || 0) + 1
   save(videos)
-  res.json({ ok: true, likes: v.likes })
+  res.json({ ok: true, liked: true, likes: v.likes })
 })
 
-// Serve frontend
+// Serve frontend single video route
 app.get('/video/:id', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'))
 })
 
-app.listen(PORT, () => console.log('SilentNotes Videos online'))
+app.listen(PORT, () => console.log('SilentNotes Videos online on port', PORT))
