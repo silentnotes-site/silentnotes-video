@@ -1,254 +1,283 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SilentNotes Videos</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Inter,Arial;background:linear-gradient(135deg,#ff0080,#7928ca,#2afadf);background-size:400% 400%;animation:bg 18s infinite alternate;color:white}
+body{margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#ff0080,#7928ca,#2afadf);background-size:400% 400%;animation:bg 18s infinite alternate;color:#fff}
 @keyframes bg{0%{background-position:0%}100%{background-position:100%}}
 .hidden{display:none}
-h1{text-align:center;margin:20px 0}
-#container{max-width:480px;margin:auto;padding-bottom:80px}
-form{background:rgba(255,255,255,.15);backdrop-filter:blur(12px);padding:18px;border-radius:22px;display:flex;flex-direction:column;gap:10px;margin:12px}
-input,button,textarea{padding:12px;border-radius:14px;border:none;outline:none;font-size:15px}
-button{font-weight:700;cursor:pointer;background:white;color:black}
-#feed{display:flex;flex-direction:column;gap:30px;padding:0 12px}
-.videoCard{background:rgba(0,0,0,.25);border-radius:26px;overflow:hidden}
-.player{position:relative;width:100%;height:56vw;max-height:65vh;background:black}
+.container{max-width:720px;margin:0 auto;padding:18px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.title{font-size:20px;font-weight:700;text-align:center;flex:1}
+.controls{display:flex;gap:8px}
+.btn{background:rgba(255,255,255,0.9);color:#000;padding:8px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:700}
+.authBox{display:flex;gap:8px;justify-content:center;margin-bottom:12px}
+.input{padding:10px;border-radius:10px;border:none;outline:none}
+.feed{display:flex;flex-direction:column;gap:18px}
+.card{background:rgba(0,0,0,0.25);border-radius:16px;overflow:hidden}
+.player{position:relative;width:100%;height:56vw;max-height:56vh;background:#000}
 .player video{width:100%;height:100%;object-fit:cover}
-.overlayRight{position:absolute;right:10px;bottom:90px;display:flex;flex-direction:column;gap:14px;font-size:14px;align-items:center}
-.action{background:rgba(0,0,0,.6);padding:10px;border-radius:50%;cursor:pointer;text-align:center;user-select:none}
-.meta{padding:14px;display:flex;flex-direction:column;gap:8px}
-.author{display:flex;align-items:center;gap:10px;cursor:pointer}
-.author img{width:40px;height:40px;border-radius:50%}
-.comments{margin-top:8px;display:flex;flex-direction:column;gap:8px}
-.comment{background:rgba(255,255,255,.12);padding:8px 10px;border-radius:12px;font-size:14px;display:flex;gap:8px;align-items:flex-start}
-.comment img{width:32px;height:32px;border-radius:50%}
-.addComment{display:flex;gap:6px;margin-top:6px}
-.addComment input{flex:1;padding:10px;border-radius:12px}
-.menu{position:fixed;top:10px;right:10px;display:flex;gap:8px}
-.menu button{padding:8px 12px;border-radius:12px}
-.empty{text-align:center;opacity:.7;margin-top:50px}
-.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6)}
-.modal .box{width:94%;max-width:520px;background:rgba(255,255,255,.06);padding:18px;border-radius:16px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:10px}
-.tagline{color:rgba(255,255,255,.8);font-size:13px}
-.hastagsRow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.hastagsRow .tag{background:rgba(255,255,255,.08);padding:6px 8px;border-radius:10px;font-size:13px}
-.small{font-size:13px;color:rgba(255,255,255,.8)}
+.overlay{position:absolute;right:10px;bottom:12px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.action{background:rgba(0,0,0,0.6);padding:10px;border-radius:50%;cursor:pointer;user-select:none}
+.meta{padding:12px;display:flex;flex-direction:column;gap:8px}
+.authorRow{display:flex;gap:10px;align-items:center}
+.authorRow img{width:44px;height:44px;border-radius:50%}
+.desc{color:rgba(255,255,255,0.9)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{background:rgba(255,255,255,0.08);padding:6px 8px;border-radius:10px;font-size:13px}
+.comments{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.comment{display:flex;gap:8px;background:rgba(255,255,255,0.06);padding:8px;border-radius:12px;align-items:flex-start}
+.comment img{width:36px;height:36px;border-radius:50%}
+.addComment{display:flex;gap:8px;margin-top:6px}
+.addComment input{flex:1;padding:10px;border-radius:10px;border:none;outline:none}
+.empty{opacity:0.8;text-align:center;padding:30px}
+.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6)}
+.modal.hidden{display:none}
+.modalBox{width:94%;max-width:600px;background:rgba(255,255,255,0.04);padding:16px;border-radius:12px;backdrop-filter:blur(6px);display:flex;flex-direction:column;gap:8px}
+.small{font-size:13px;color:rgba(255,255,255,0.8)}
+.link{background:transparent;border:1px solid rgba(255,255,255,0.12);color:#fff;padding:8px 12px;border-radius:10px;cursor:pointer}
 </style>
 </head>
 <body>
-
-<div id="auth">
-<h1>SilentNotes</h1>
-<div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px">
-<input id="loginUsername" placeholder="Username" style="border-radius:12px">
-<input id="loginPassword" type="password" placeholder="Password" style="border-radius:12px">
-<button id="doLogin">Accedi</button>
-<button id="doRegister">Registrati</button>
-</div>
-<div id="authMsg" class="small" style="text-align:center"></div>
-</div>
-
-<div id="home" class="hidden">
-<div class="menu">
-<button id="uploadBtn">Carica video</button>
-<button id="logoutBtn">Logout</button>
-</div>
-
-<h1>SilentNotes Videos</h1>
-
-<div id="container">
-<div id="feed"><div class="empty">No videos</div></div>
-</div>
-</div>
-
-<div id="uploadModal" class="hidden modal">
-  <div class="box">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <div style="font-weight:700">Carica video</div>
-      <button id="closeUpload">Chiudi</button>
+<div class="container">
+  <div class="header">
+    <div class="title">SilentNotes Videos</div>
+    <div class="controls">
+      <button id="uploadBtn" class="btn">Carica video</button>
+      <button id="logoutBtn" class="btn hidden">Logout</button>
     </div>
-    <form id="uploadForm">
-      <input type="file" id="file" required>
-      <textarea id="description" placeholder="Descrizione" rows="3"></textarea>
-      <input id="hashtags" placeholder="#hashtags">
-      <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button type="submit">Pubblica</button>
+  </div>
+
+  <div id="auth" class="authBox">
+    <input id="username" class="input" placeholder="username">
+    <input id="password" class="input" type="password" placeholder="password">
+    <button id="loginBtn" class="btn">Accedi</button>
+    <button id="registerBtn" class="link" type="button">Registrati</button>
+  </div>
+
+  <div id="msg" class="small" style="text-align:center;margin-bottom:8px"></div>
+
+  <div id="feed" class="feed">
+    <div class="empty">Carica un video o accedi per interagire</div>
+  </div>
+</div>
+
+<div id="uploadModal" class="modal hidden" aria-hidden="true">
+  <div class="modalBox" role="dialog" aria-modal="true">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-weight:700">Pubblica un video</div>
+      <button id="closeUpload" class="link" type="button">Chiudi</button>
+    </div>
+    <form id="uploadForm" style="display:flex;flex-direction:column;gap:8px">
+      <input id="file" type="file" accept="video/*">
+      <textarea id="description" rows="3" placeholder="Descrizione" style="padding:10px;border-radius:10px;border:none;outline:none"></textarea>
+      <input id="hashtags" class="input" placeholder="#hashtag1 #hashtag2">
+      <div style="display:flex;justify-content:flex-end">
+        <button type="submit" class="btn">Pubblica</button>
       </div>
-      <div class="tagline">Metti una descrizione convincente e aggiungi hashtag dopo per aumentare la viralità.</div>
+      <div class="small">Aggiungi una descrizione convincente e inserisci gli hashtag per aumentare la viralità.</div>
     </form>
   </div>
 </div>
 
 <script>
 const avatarDefault = "https://ui-avatars.com/api/?name=User&background=111111&color=ffffff"
-let token = localStorage.getItem('sn_token')
+let token = localStorage.getItem('sn_token') || null
 let currentUser = localStorage.getItem('sn_user') || null
 let currentDisplay = localStorage.getItem('sn_display') || null
 let currentAvatar = localStorage.getItem('sn_avatar') || avatarDefault
 
-const authDiv = document.getElementById('auth')
-const homeDiv = document.getElementById('home')
-const feed = document.getElementById('feed')
-const authMsg = document.getElementById('authMsg')
+const authBox = document.getElementById('auth')
+const loginBtn = document.getElementById('loginBtn')
+const registerBtn = document.getElementById('registerBtn')
+const logoutBtn = document.getElementById('logoutBtn')
 const uploadBtn = document.getElementById('uploadBtn')
 const uploadModal = document.getElementById('uploadModal')
 const closeUpload = document.getElementById('closeUpload')
+const uploadForm = document.getElementById('uploadForm')
+const feed = document.getElementById('feed')
+const msg = document.getElementById('msg')
 
-if (token && currentUser) {
-  authDiv.classList.add('hidden')
-  homeDiv.classList.remove('hidden')
-  loadVideos()
-} else {
-  authDiv.classList.remove('hidden')
-  homeDiv.classList.add('hidden')
+function setAuthState(userObj){
+  if(userObj){
+    token = userObj.token
+    currentUser = userObj.username
+    currentDisplay = userObj.displayName || userObj.username
+    currentAvatar = userObj.avatar || avatarDefault
+    localStorage.setItem('sn_token', token)
+    localStorage.setItem('sn_user', currentUser)
+    localStorage.setItem('sn_display', currentDisplay)
+    localStorage.setItem('sn_avatar', currentAvatar)
+    authBox.classList.add('hidden')
+    logoutBtn.classList.remove('hidden')
+    msg.textContent = ''
+    loadVideos()
+  } else {
+    token = null
+    currentUser = null
+    currentDisplay = null
+    currentAvatar = avatarDefault
+    localStorage.removeItem('sn_token')
+    localStorage.removeItem('sn_user')
+    localStorage.removeItem('sn_display')
+    localStorage.removeItem('sn_avatar')
+    authBox.classList.remove('hidden')
+    logoutBtn.classList.add('hidden')
+    loadVideos()
+  }
 }
 
-document.getElementById('doLogin').onclick = async () => {
-  authMsg.textContent = ''
-  const u = document.getElementById('loginUsername').value
-  const p = document.getElementById('loginPassword').value
-  if (!u || !p) { authMsg.textContent = 'Inserisci username e password'; return }
-  const r = await fetch('/auth/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ username: u, password: p }) })
-  const d = await r.json()
-  if (!r.ok) { authMsg.textContent = d.error || 'Login fallito'; return }
-  token = d.token
-  currentUser = d.user.username
-  currentDisplay = d.user.displayName || currentUser
-  currentAvatar = d.user.avatar || avatarDefault
-  localStorage.setItem('sn_token', token)
-  localStorage.setItem('sn_user', currentUser)
-  localStorage.setItem('sn_display', currentDisplay)
-  localStorage.setItem('sn_avatar', currentAvatar)
-  authDiv.classList.add('hidden')
-  homeDiv.classList.remove('hidden')
-  loadVideos()
+async function api(path, opts = {}){
+  const h = opts.headers || {}
+  if (token) h.Authorization = 'Bearer ' + token
+  opts.headers = h
+  const r = await fetch(path, opts)
+  const j = await r.json().catch(()=>({}))
+  return { ok: r.ok, status: r.status, data: j }
 }
 
-document.getElementById('doRegister').onclick = async () => {
-  authMsg.textContent = ''
-  const u = document.getElementById('loginUsername').value
-  const p = document.getElementById('loginPassword').value
-  if (!u || !p) { authMsg.textContent = 'Inserisci username e password'; return }
-  const r = await fetch('/auth/register', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ username: u, password: p, displayName: u }) })
-  const d = await r.json()
-  if (!r.ok) { authMsg.textContent = d.error || 'Registrazione fallita'; return }
-  token = d.token
-  currentUser = d.user.username
-  currentDisplay = d.user.displayName || currentUser
-  currentAvatar = d.user.avatar || avatarDefault
-  localStorage.setItem('sn_token', token)
-  localStorage.setItem('sn_user', currentUser)
-  localStorage.setItem('sn_display', currentDisplay)
-  localStorage.setItem('sn_avatar', currentAvatar)
-  authDiv.classList.add('hidden')
-  homeDiv.classList.remove('hidden')
+loginBtn.addEventListener('click', async ()=>{
+  const u = document.getElementById('username').value.trim()
+  const p = document.getElementById('password').value
+  if(!u||!p){ msg.textContent='Inserisci username e password'; return }
+  const res = await api('/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username:u, password:p }) })
+  if(!res.ok){ msg.textContent = res.data.error || 'Login fallito'; return }
+  setAuthState({ token: res.data.token, username: res.data.user.username, displayName: res.data.user.displayName, avatar: res.data.user.avatar })
+})
+
+registerBtn.addEventListener('click', async ()=>{
+  const u = document.getElementById('username').value.trim()
+  const p = document.getElementById('password').value
+  if(!u||!p){ msg.textContent='Inserisci username e password'; return }
+  const res = await api('/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username:u, password:p, displayName:u }) })
+  if(!res.ok){ msg.textContent = res.data.error || 'Registrazione fallita'; return }
+  setAuthState({ token: res.data.token, username: res.data.user.username, displayName: res.data.user.displayName, avatar: res.data.user.avatar })
+})
+
+logoutBtn.addEventListener('click', ()=>{
+  setAuthState(null)
+})
+
+uploadBtn.addEventListener('click', ()=>{
+  uploadModal.classList.remove('hidden')
+  uploadModal.setAttribute('aria-hidden','false')
+  const fileInput = document.getElementById('file')
+  if(fileInput) fileInput.focus()
+})
+
+closeUpload.addEventListener('click', (e)=>{
+  e.preventDefault()
+  uploadModal.classList.add('hidden')
+  uploadModal.setAttribute('aria-hidden','true')
+})
+
+uploadModal.addEventListener('click', (e)=>{
+  if(e.target === uploadModal){
+    uploadModal.classList.add('hidden')
+    uploadModal.setAttribute('aria-hidden','true')
+  }
+})
+
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape' && !uploadModal.classList.contains('hidden')){
+    uploadModal.classList.add('hidden')
+    uploadModal.setAttribute('aria-hidden','true')
+  }
+})
+
+uploadForm.addEventListener('submit', async (e)=>{
+  e.preventDefault()
+  const fileInput = document.getElementById('file')
+  const file = fileInput.files[0]
+  if(!file){ msg.textContent = 'Seleziona un file'; return }
+  const form = new FormData()
+  form.append('file', file)
+  form.append('description', document.getElementById('description').value || '')
+  form.append('hashtags', document.getElementById('hashtags').value || '')
+  form.append('author', currentUser || '')
+  form.append('authorDisplay', currentDisplay || currentUser || '')
+  const res = await fetch('/api/upload', { method:'POST', body: form })
+  const j = await res.json().catch(()=>({}))
+  if(!res.ok){ msg.textContent = j.error || 'Upload fallito'; return }
+  uploadModal.classList.add('hidden')
+  uploadModal.setAttribute('aria-hidden','true')
+  fileInput.value = ''
+  document.getElementById('description').value = ''
+  document.getElementById('hashtags').value = ''
   loadVideos()
+})
+
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) }
+
+function renderCommentHtml(c){
+  const u = c.user || (c.username ? { username:c.username, displayName:c.username, avatar:avatarDefault } : { username:'anon', displayName:'Anon', avatar:avatarDefault })
+  return `<div class="comment"><img src="${escapeHtml(u.avatar)}"><div><strong>${escapeHtml(u.displayName)}</strong><div class="small">@${escapeHtml(u.username)}</div><div style="margin-top:6px">${escapeHtml(c.text)}</div></div></div>`
 }
-
-document.getElementById('logoutBtn').onclick = () => { localStorage.removeItem('sn_token'); localStorage.removeItem('sn_user'); localStorage.removeItem('sn_display'); localStorage.removeItem('sn_avatar'); token = null; currentUser = null; currentDisplay = null; currentAvatar = avatarDefault; location.reload() }
-
-uploadBtn.onclick = () => { uploadModal.classList.remove('hidden') }
-closeUpload.onclick = () => { uploadModal.classList.add('hidden') }
 
 async function loadVideos(){
-  const r = await fetch('/api/videos')
-  const d = await r.json()
+  const res = await api('/api/videos', { method:'GET' })
   feed.innerHTML = ''
-  if (!d.videos.length) { feed.innerHTML = '<div class="empty">No videos</div>'; return }
-  d.videos.forEach(v => {
-    const authorObj = (typeof v.author === 'object') ? v.author : { username: v.author || 'User', displayName: v.author || 'User', avatar: avatarDefault }
-    const c = document.createElement('div')
-    c.className = 'videoCard'
-    c.innerHTML = `
+  if(!res.ok || !res.data || !res.data.videos || !res.data.videos.length){ feed.innerHTML = '<div class="empty">Nessun video</div>'; return }
+  for(const v of res.data.videos){
+    const author = (typeof v.author === 'object') ? v.author : { username: v.author || 'User', displayName: v.author || 'User', avatar: avatarDefault }
+    const card = document.createElement('div')
+    card.className = 'card'
+    card.innerHTML = `
       <div class="player">
-        <video src="/media/${v.filename}" loop playsinline></video>
-        <div class="overlayRight">
-          <div class="action">👁 ${v.views||0}</div>
+        <video src="/media/${escapeHtml(v.filename)}" loop playsinline></video>
+        <div class="overlay">
+          <div class="action views">👁 ${v.views||0}</div>
           <div class="action likeBtn" data-id="${v.id}">❤️ ${v.likes||0}</div>
         </div>
       </div>
       <div class="meta">
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <div class="author" data-user="${authorObj.username}">
-            <img src="${authorObj.avatar}">
-            <div style="display:flex;flex-direction:column">
-              <strong>${authorObj.displayName||authorObj.username}</strong>
-              <span class="small">@${authorObj.username}</span>
-            </div>
+        <div class="authorRow">
+          <img src="${escapeHtml(author.avatar)}">
+          <div>
+            <div style="font-weight:700">${escapeHtml(author.displayName)}</div>
+            <div class="small">@${escapeHtml(author.username)}</div>
           </div>
-          <div class="small">${escapeHtml(v.description||'')}</div>
-          <div class="hastagsRow">${(v.hashtags||[]).map(t=>`<div class="tag">${t}</div>`).join('')}</div>
         </div>
-        <div class="comments" id="c-${v.id}">
-          ${(v.comments||[]).map(x=>renderCommentHtml(x)).join('')}
-        </div>
+        <div class="desc">${escapeHtml(v.description||'')}</div>
+        <div class="tags">${(v.hashtags||[]).map(t=>`<div class="tag">${escapeHtml(t)}</div>`).join('')}</div>
+        <div class="comments" id="c-${v.id}">${(v.comments||[]).map(c=>renderCommentHtml(c)).join('')}</div>
         <div class="addComment">
           <input id="i-${v.id}" placeholder="Aggiungi un commento">
-          <button data-id="${v.id}" class="sendComment">Invia</button>
+          <button data-id="${v.id}" class="btn sendComment" type="button">Invia</button>
         </div>
       </div>`
-    feed.appendChild(c)
-    const video = c.querySelector('video')
-    video.onclick = () => video.paused ? video.play() : video.pause()
-    video.onplay = () => fetch('/api/view/'+v.id,{method:'POST'})
-    c.querySelector('.author').onclick = () => { const u = c.querySelector('.author').getAttribute('data-user'); if (u) location.href=`https://silentnotes.cleverapps.io/${u}/ask` }
-    c.querySelector('.likeBtn').onclick = async (ev) => {
+    feed.appendChild(card)
+    const video = card.querySelector('video')
+    video.onclick = ()=> video.paused ? video.play() : video.pause()
+    video.onplay = ()=> fetch('/api/view/'+v.id, { method:'POST' })
+    const likeEl = card.querySelector('.likeBtn')
+    likeEl.addEventListener('click', async (ev)=>{
       const id = ev.currentTarget.getAttribute('data-id')
-      const r = await fetch('/api/like/'+id,{method:'POST'})
-      const dd = await r.json()
-      if (dd && dd.ok) ev.currentTarget.innerHTML = `❤️ ${dd.likes}`
-    }
-    c.querySelector('.sendComment').onclick = async (ev) => {
+      const r = await fetch('/api/like/'+id, { method:'POST' })
+      const j = await r.json().catch(()=>({}))
+      if(r.ok && j.ok) ev.currentTarget.innerHTML = `❤️ ${j.likes}`
+    })
+    const sendBtn = card.querySelector('.sendComment')
+    sendBtn.addEventListener('click', async (ev)=>{
       const id = ev.currentTarget.getAttribute('data-id')
-      const i = document.getElementById('i-'+id)
-      if (!i.value.trim()) return
-      const body = { text: i.value, username: currentUser || 'anon', displayName: currentDisplay || (currentUser||'anon'), avatar: currentAvatar || avatarDefault }
-      const r = await fetch('/api/comment/'+id,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(body)
-      })
-      const dd = await r.json()
-      if (dd.ok) {
-        document.getElementById('c-'+id).insertAdjacentHTML('beforeend', renderCommentHtml(dd.comment))
-        i.value = ''
+      const input = document.getElementById('i-'+id)
+      if(!input.value.trim()) return
+      const body = { text: input.value.trim(), username: currentUser || 'anon', displayName: currentDisplay || (currentUser||'anon'), avatar: currentAvatar || avatarDefault }
+      const r = await fetch('/api/comment/'+id, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
+      const j = await r.json().catch(()=>({}))
+      if(r.ok && j.ok){
+        document.getElementById('c-'+id).insertAdjacentHTML('beforeend', renderCommentHtml(j.comment))
+        input.value = ''
       }
-    }
-  })
-}
-
-function renderCommentHtml(x){
-  const user = x.user || (x.username ? { username: x.username, displayName: x.username, avatar: avatarDefault } : { username:'anon', displayName:'Anon', avatar: avatarDefault })
-  return `<div class="comment"><img src="${user.avatar}"><div style="display:flex;flex-direction:column"><strong>${escapeHtml(user.displayName)}</strong><div class="small">@${escapeHtml(user.username)}</div><div style="margin-top:6px">${escapeHtml(x.text)}</div></div></div>`
-}
-
-function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m] }) }
-
-document.getElementById('uploadForm').onsubmit = async e => {
-  e.preventDefault()
-  const f = new FormData()
-  const file = document.getElementById('file').files[0]
-  if (!file) return
-  f.append('file', file)
-  f.append('description', document.getElementById('description').value)
-  f.append('hashtags', document.getElementById('hashtags').value)
-  f.append('author', currentUser || '')
-  f.append('authorDisplay', currentDisplay || currentUser || '')
-  const r = await fetch('/api/upload',{method:'POST',body:f})
-  const d = await r.json()
-  if (d.ok) {
-    uploadModal.classList.add('hidden')
-    document.getElementById('file').value = ''
-    document.getElementById('description').value = ''
-    document.getElementById('hashtags').value = ''
-    loadVideos()
+    })
   }
 }
-</script>
 
+if(token && currentUser){ authBox.classList.add('hidden'); logoutBtn.classList.remove('hidden') }
+loadVideos()
+</script>
 </body>
 </html>
