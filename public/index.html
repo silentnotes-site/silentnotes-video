@@ -12,88 +12,91 @@ body{margin:0;font-family:Inter,Arial;background:linear-gradient(135deg,#ff0080,
 h1{text-align:center;margin:20px 0}
 #container{max-width:480px;margin:auto;padding-bottom:80px}
 form{background:rgba(255,255,255,.15);backdrop-filter:blur(12px);padding:18px;border-radius:22px;display:flex;flex-direction:column;gap:10px;margin:12px}
-input,button{padding:12px;border-radius:14px;border:none;outline:none;font-size:15px}
+input,button,textarea{padding:12px;border-radius:14px;border:none;outline:none;font-size:15px}
 button{font-weight:700;cursor:pointer;background:white;color:black}
 #feed{display:flex;flex-direction:column;gap:30px;padding:0 12px}
 .videoCard{background:rgba(0,0,0,.25);border-radius:26px;overflow:hidden}
-.player{position:relative;width:100%;height:85vh;background:black}
+.player{position:relative;width:100%;height:56vw;max-height:65vh;background:black}
 .player video{width:100%;height:100%;object-fit:cover}
 .overlayRight{position:absolute;right:10px;bottom:90px;display:flex;flex-direction:column;gap:14px;font-size:14px;align-items:center}
-.action{background:rgba(0,0,0,.6);padding:10px;border-radius:50%;cursor:pointer;text-align:center}
-.meta{padding:14px;display:flex;flex-direction:column;gap:6px}
-.author{display:flex;align-items:center;gap:8px;cursor:pointer}
-.author img{width:32px;height:32px;border-radius:50%}
-.comments{margin-top:8px;display:flex;flex-direction:column;gap:6px}
-.comment{background:rgba(255,255,255,.18);padding:6px 10px;border-radius:12px;font-size:14px}
+.action{background:rgba(0,0,0,.6);padding:10px;border-radius:50%;cursor:pointer;text-align:center;user-select:none}
+.meta{padding:14px;display:flex;flex-direction:column;gap:8px}
+.author{display:flex;align-items:center;gap:10px;cursor:pointer}
+.author img{width:40px;height:40px;border-radius:50%}
+.comments{margin-top:8px;display:flex;flex-direction:column;gap:8px}
+.comment{background:rgba(255,255,255,.12);padding:8px 10px;border-radius:12px;font-size:14px;display:flex;gap:8px;align-items:flex-start}
+.comment img{width:32px;height:32px;border-radius:50%}
 .addComment{display:flex;gap:6px;margin-top:6px}
-.addComment input{flex:1}
+.addComment input{flex:1;padding:10px;border-radius:12px}
 .menu{position:fixed;top:10px;right:10px;display:flex;gap:8px}
 .menu button{padding:8px 12px;border-radius:12px}
 .empty{text-align:center;opacity:.7;margin-top:50px}
-.toggle{display:flex;gap:8px;justify-content:center;margin-bottom:8px}
-.linkbtn{background:transparent;color:white;border:1px solid rgba(255,255,255,.2);padding:8px 12px;border-radius:12px;cursor:pointer}
+.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6)}
+.modal .box{width:94%;max-width:520px;background:rgba(255,255,255,.06);padding:18px;border-radius:16px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:10px}
+.tagline{color:rgba(255,255,255,.8);font-size:13px}
+.hastagsRow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.hastagsRow .tag{background:rgba(255,255,255,.08);padding:6px 8px;border-radius:10px;font-size:13px}
+.small{font-size:13px;color:rgba(255,255,255,.8)}
 </style>
 </head>
 <body>
 
 <div id="auth">
 <h1>SilentNotes</h1>
-<div class="toggle">
-<button id="showLogin" class="linkbtn">Accedi</button>
-<button id="showRegister" class="linkbtn">Registrati</button>
+<div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px">
+<input id="loginUsername" placeholder="Username" style="border-radius:12px">
+<input id="loginPassword" type="password" placeholder="Password" style="border-radius:12px">
+<button id="doLogin">Accedi</button>
+<button id="doRegister">Registrati</button>
 </div>
-
-<form id="loginForm">
-<input id="loginUsername" placeholder="Username" required>
-<input id="loginPassword" type="password" placeholder="Password" required>
-<button type="submit">Login</button>
-<div id="loginError" style="color:#ffcccc;text-align:center"></div>
-</form>
-
-<form id="registerForm" class="hidden">
-<input id="regUsername" placeholder="Username" required>
-<input id="regDisplay" placeholder="Nome visualizzato (opzionale)">
-<input id="regPassword" type="password" placeholder="Password" required>
-<button type="submit">Crea account</button>
-<div id="regError" style="color:#ffcccc;text-align:center"></div>
-</form>
+<div id="authMsg" class="small" style="text-align:center"></div>
 </div>
 
 <div id="home" class="hidden">
 <div class="menu">
-<button id="profileBtn">Profilo</button>
+<button id="uploadBtn">Carica video</button>
 <button id="logoutBtn">Logout</button>
 </div>
 
 <h1>SilentNotes Videos</h1>
 
 <div id="container">
-
-<form id="uploadForm">
-<input type="file" id="file" required>
-<input id="description" placeholder="Description">
-<input id="hashtags" placeholder="#hashtags">
-<button>Upload</button>
-</form>
-
 <div id="feed"><div class="empty">No videos</div></div>
 </div>
 </div>
 
+<div id="uploadModal" class="hidden modal">
+  <div class="box">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-weight:700">Carica video</div>
+      <button id="closeUpload">Chiudi</button>
+    </div>
+    <form id="uploadForm">
+      <input type="file" id="file" required>
+      <textarea id="description" placeholder="Descrizione" rows="3"></textarea>
+      <input id="hashtags" placeholder="#hashtags">
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button type="submit">Pubblica</button>
+      </div>
+      <div class="tagline">Metti una descrizione convincente e aggiungi hashtag dopo per aumentare la viralità.</div>
+    </form>
+  </div>
+</div>
+
 <script>
-const avatarDefault="https://th.bing.com/th/id/OIP.pdgwLL8oxjSs9n4AV66x5wHaHa?o=7&rm=3&rs=1&pid=ImgDetMain"
+const avatarDefault = "https://ui-avatars.com/api/?name=User&background=111111&color=ffffff"
 let token = localStorage.getItem('sn_token')
 let currentUser = localStorage.getItem('sn_user') || null
+let currentDisplay = localStorage.getItem('sn_display') || null
+let currentAvatar = localStorage.getItem('sn_avatar') || avatarDefault
+
 const authDiv = document.getElementById('auth')
 const homeDiv = document.getElementById('home')
-const loginForm = document.getElementById('loginForm')
-const registerForm = document.getElementById('registerForm')
-const loginError = document.getElementById('loginError')
-const regError = document.getElementById('regError')
-const showLogin = document.getElementById('showLogin')
-const showRegister = document.getElementById('showRegister')
-const profileBtn = document.getElementById('profileBtn')
-const logoutBtn = document.getElementById('logoutBtn')
+const feed = document.getElementById('feed')
+const authMsg = document.getElementById('authMsg')
+const uploadBtn = document.getElementById('uploadBtn')
+const uploadModal = document.getElementById('uploadModal')
+const closeUpload = document.getElementById('closeUpload')
 
 if (token && currentUser) {
   authDiv.classList.add('hidden')
@@ -104,62 +107,60 @@ if (token && currentUser) {
   homeDiv.classList.add('hidden')
 }
 
-showLogin.onclick = ()=>{ loginForm.classList.remove('hidden'); registerForm.classList.add('hidden') }
-showRegister.onclick = ()=>{ registerForm.classList.remove('hidden'); loginForm.classList.add('hidden') }
-
-loginForm.onsubmit = async e => {
-  e.preventDefault()
-  loginError.textContent = ''
+document.getElementById('doLogin').onclick = async () => {
+  authMsg.textContent = ''
   const u = document.getElementById('loginUsername').value
   const p = document.getElementById('loginPassword').value
-  const r = await fetch('/auth/login', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ username: u, password: p })
-  })
+  if (!u || !p) { authMsg.textContent = 'Inserisci username e password'; return }
+  const r = await fetch('/auth/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ username: u, password: p }) })
   const d = await r.json()
-  if (!r.ok) { loginError.textContent = d.error || 'Login fallito'; return }
+  if (!r.ok) { authMsg.textContent = d.error || 'Login fallito'; return }
   token = d.token
   currentUser = d.user.username
+  currentDisplay = d.user.displayName || currentUser
+  currentAvatar = d.user.avatar || avatarDefault
   localStorage.setItem('sn_token', token)
   localStorage.setItem('sn_user', currentUser)
+  localStorage.setItem('sn_display', currentDisplay)
+  localStorage.setItem('sn_avatar', currentAvatar)
   authDiv.classList.add('hidden')
   homeDiv.classList.remove('hidden')
   loadVideos()
 }
 
-registerForm.onsubmit = async e => {
-  e.preventDefault()
-  regError.textContent = ''
-  const u = document.getElementById('regUsername').value
-  const p = document.getElementById('regPassword').value
-  const dname = document.getElementById('regDisplay').value
-  const r = await fetch('/auth/register', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ username: u, password: p, displayName: dname })
-  })
-  const data = await r.json()
-  if (!r.ok) { regError.textContent = data.error || 'Registrazione fallita'; return }
-  token = data.token
-  currentUser = data.user.username
+document.getElementById('doRegister').onclick = async () => {
+  authMsg.textContent = ''
+  const u = document.getElementById('loginUsername').value
+  const p = document.getElementById('loginPassword').value
+  if (!u || !p) { authMsg.textContent = 'Inserisci username e password'; return }
+  const r = await fetch('/auth/register', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ username: u, password: p, displayName: u }) })
+  const d = await r.json()
+  if (!r.ok) { authMsg.textContent = d.error || 'Registrazione fallita'; return }
+  token = d.token
+  currentUser = d.user.username
+  currentDisplay = d.user.displayName || currentUser
+  currentAvatar = d.user.avatar || avatarDefault
   localStorage.setItem('sn_token', token)
   localStorage.setItem('sn_user', currentUser)
+  localStorage.setItem('sn_display', currentDisplay)
+  localStorage.setItem('sn_avatar', currentAvatar)
   authDiv.classList.add('hidden')
   homeDiv.classList.remove('hidden')
   loadVideos()
 }
 
-logoutBtn.onclick = ()=>{ localStorage.removeItem('sn_token'); localStorage.removeItem('sn_user'); token = null; currentUser = null; location.reload() }
-profileBtn.onclick = ()=>{ if (currentUser) location.href = `https://silentnotes.cleverapps.io/${currentUser}/ask` }
+document.getElementById('logoutBtn').onclick = () => { localStorage.removeItem('sn_token'); localStorage.removeItem('sn_user'); localStorage.removeItem('sn_display'); localStorage.removeItem('sn_avatar'); token = null; currentUser = null; currentDisplay = null; currentAvatar = avatarDefault; location.reload() }
+
+uploadBtn.onclick = () => { uploadModal.classList.remove('hidden') }
+closeUpload.onclick = () => { uploadModal.classList.add('hidden') }
 
 async function loadVideos(){
   const r = await fetch('/api/videos')
   const d = await r.json()
-  const feed = document.getElementById('feed')
   feed.innerHTML = ''
   if (!d.videos.length) { feed.innerHTML = '<div class="empty">No videos</div>'; return }
-  d.videos.forEach(v=>{
+  d.videos.forEach(v => {
+    const authorObj = (typeof v.author === 'object') ? v.author : { username: v.author || 'User', displayName: v.author || 'User', avatar: avatarDefault }
     const c = document.createElement('div')
     c.className = 'videoCard'
     c.innerHTML = `
@@ -171,51 +172,63 @@ async function loadVideos(){
         </div>
       </div>
       <div class="meta">
-        <div class="author" data-user="${v.author||''}">
-          <img src="${avatarDefault}">
-          <div>${v.author||'User'}</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="author" data-user="${authorObj.username}">
+            <img src="${authorObj.avatar}">
+            <div style="display:flex;flex-direction:column">
+              <strong>${authorObj.displayName||authorObj.username}</strong>
+              <span class="small">@${authorObj.username}</span>
+            </div>
+          </div>
+          <div class="small">${escapeHtml(v.description||'')}</div>
+          <div class="hastagsRow">${(v.hashtags||[]).map(t=>`<div class="tag">${t}</div>`).join('')}</div>
         </div>
-        <div>${v.description||''}</div>
-        <div>${(v.hashtags||[]).join(' ')}</div>
         <div class="comments" id="c-${v.id}">
-          ${v.comments.map(x=>`<div class="comment">${x.text}</div>`).join('')}
+          ${(v.comments||[]).map(x=>renderCommentHtml(x)).join('')}
         </div>
         <div class="addComment">
-          <input id="i-${v.id}" placeholder="Add comment">
-          <button data-id="${v.id}" class="sendComment">Send</button>
+          <input id="i-${v.id}" placeholder="Aggiungi un commento">
+          <button data-id="${v.id}" class="sendComment">Invia</button>
         </div>
       </div>`
     feed.appendChild(c)
     const video = c.querySelector('video')
-    video.onclick = ()=>video.paused?video.play():video.pause()
-    video.onplay = ()=>fetch('/api/view/'+v.id,{method:'POST'})
-    c.querySelector('.author').onclick = ()=>{ const u = c.querySelector('.author').getAttribute('data-user'); if (u) location.href=`https://silentnotes.cleverapps.io/${u}/ask` }
+    video.onclick = () => video.paused ? video.play() : video.pause()
+    video.onplay = () => fetch('/api/view/'+v.id,{method:'POST'})
+    c.querySelector('.author').onclick = () => { const u = c.querySelector('.author').getAttribute('data-user'); if (u) location.href=`https://silentnotes.cleverapps.io/${u}/ask` }
     c.querySelector('.likeBtn').onclick = async (ev) => {
       const id = ev.currentTarget.getAttribute('data-id')
       const r = await fetch('/api/like/'+id,{method:'POST'})
       const dd = await r.json()
-      ev.currentTarget.innerHTML = `❤️ ${dd.likes}`
+      if (dd && dd.ok) ev.currentTarget.innerHTML = `❤️ ${dd.likes}`
     }
     c.querySelector('.sendComment').onclick = async (ev) => {
       const id = ev.currentTarget.getAttribute('data-id')
       const i = document.getElementById('i-'+id)
       if (!i.value.trim()) return
+      const body = { text: i.value, username: currentUser || 'anon', displayName: currentDisplay || (currentUser||'anon'), avatar: currentAvatar || avatarDefault }
       const r = await fetch('/api/comment/'+id,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ text: i.value, username: currentUser || '' })
+        body: JSON.stringify(body)
       })
       const dd = await r.json()
       if (dd.ok) {
-        document.getElementById('c-'+id).insertAdjacentHTML('beforeend', `<div class="comment">${dd.comment.text}</div>`)
+        document.getElementById('c-'+id).insertAdjacentHTML('beforeend', renderCommentHtml(dd.comment))
         i.value = ''
       }
     }
   })
 }
 
-const uploadForm = document.getElementById('uploadForm')
-uploadForm.onsubmit = async e => {
+function renderCommentHtml(x){
+  const user = x.user || (x.username ? { username: x.username, displayName: x.username, avatar: avatarDefault } : { username:'anon', displayName:'Anon', avatar: avatarDefault })
+  return `<div class="comment"><img src="${user.avatar}"><div style="display:flex;flex-direction:column"><strong>${escapeHtml(user.displayName)}</strong><div class="small">@${escapeHtml(user.username)}</div><div style="margin-top:6px">${escapeHtml(x.text)}</div></div></div>`
+}
+
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m] }) }
+
+document.getElementById('uploadForm').onsubmit = async e => {
   e.preventDefault()
   const f = new FormData()
   const file = document.getElementById('file').files[0]
@@ -224,14 +237,18 @@ uploadForm.onsubmit = async e => {
   f.append('description', document.getElementById('description').value)
   f.append('hashtags', document.getElementById('hashtags').value)
   f.append('author', currentUser || '')
-  await fetch('/api/upload',{method:'POST',body:f})
-  document.getElementById('file').value=''
-  document.getElementById('description').value=''
-  document.getElementById('hashtags').value=''
-  loadVideos()
+  f.append('authorDisplay', currentDisplay || currentUser || '')
+  const r = await fetch('/api/upload',{method:'POST',body:f})
+  const d = await r.json()
+  if (d.ok) {
+    uploadModal.classList.add('hidden')
+    document.getElementById('file').value = ''
+    document.getElementById('description').value = ''
+    document.getElementById('hashtags').value = ''
+    loadVideos()
+  }
 }
 </script>
 
 </body>
 </html>
-
